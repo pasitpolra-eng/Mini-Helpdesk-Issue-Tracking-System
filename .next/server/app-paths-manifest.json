@@ -1,0 +1,12 @@
+{
+  "/page": "app/page.js",
+  "/issue-types/page": "app/issue-types/page.js",
+  "/api/stats/route": "app/api/stats/route.js",
+  "/api/issue-types/route": "app/api/issue-types/route.js",
+  "/create/page": "app/create/page.js",
+  "/api/tickets/route": "app/api/tickets/route.js",
+  "/tickets/page": "app/tickets/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/my-tickets/page": "app/my-tickets/page.js",
+  "/dashboard/page": "app/dashboard/page.js"
+}

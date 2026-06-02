@@ -1,0 +1,137 @@
+// ============================================================
+// page.js — My Tickets Page
+// Route: /my-tickets
+// ============================================================
+
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useApp } from '@/context/AppContext';
+import { User, Plus, UserCircle, Save } from 'lucide-react';
+import { TicketGrid } from '@/components/TicketCard';
+
+export default function MyTicketsPage() {
+    const { user, setUser, toast } = useApp();
+    
+    const [tickets, setTickets] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [profileName, setProfileName] = useState(user.name);
+    const [profileEmail, setProfileEmail] = useState(user.email);
+
+    // Fetch user-specific tickets
+    const fetchMyTickets = async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.append('requester_name', user.name);
+            
+            const res = await fetch(`/api/tickets?${params.toString()}`);
+            if (res.ok) {
+                const data = await res.json();
+                setTickets(data);
+            }
+        } catch (e) {
+            console.error('Error fetching my tickets:', e);
+            toast.error('ไม่สามารถโหลดรายการปัญหาได้');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        setProfileName(user.name);
+        setProfileEmail(user.email);
+    }, [user]);
+
+    useEffect(() => {
+        fetchMyTickets();
+    }, [user.name]);
+
+    const handleProfileSubmit = (e) => {
+        e.preventDefault();
+        if (!profileName.trim()) {
+            toast.error('กรุณากรอกชื่อผู้แจ้ง');
+            return;
+        }
+
+        setUser(profileName.trim(), profileEmail.trim());
+        toast.success('อัปเดตข้อมูลผู้ใช้งานจำลองแล้ว');
+    };
+
+    return (
+        <div className="page-my-tickets fade-in">
+            <div className="page-header">
+                <div className="page-header-left">
+                    <h1 className="page-title">
+                        <User style={{ width: 24, height: 24, marginRight: 8, display: 'inline', verticalAlign: 'middle' }} />
+                        ปัญหาของฉัน
+                    </h1>
+                    <p className="page-subtitle">ติดตามสถานะปัญหาที่คุณแจ้งไว้เข้าระบบทั้งหมด</p>
+                </div>
+                <Link href="/create" className="btn btn-primary">
+                    <Plus style={{ width: 16, height: 16 }} />
+                    แจ้งปัญหาใหม่
+                </Link>
+            </div>
+
+            {/* Profile / Filter settings */}
+            <div className="profile-card glass-card">
+                <div className="profile-icon">
+                    <UserCircle style={{ width: 48, height: 48, color: 'var(--primary-color)' }} />
+                </div>
+                <div className="profile-details">
+                    <h3>โปรไฟล์ผู้แจ้งปัญหาจำลอง</h3>
+                    <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>
+                        ระบบระบุตัวตนของคุณจากชื่อผู้แจ้งด้านล่างนี้เพื่อกรองแสดงเฉพาะรายการของคุณ
+                    </p>
+                    
+                    <form className="profile-form" onSubmit={handleProfileSubmit}>
+                        <div className="form-row" style={{ alignItems: 'flex-end' }}>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                <label className="form-label">ชื่อผู้แจ้ง</label>
+                                <input 
+                                    type="text" 
+                                    className="form-input" 
+                                    value={profileName} 
+                                    onChange={(e) => setProfileName(e.target.value)}
+                                    required 
+                                />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                <label className="form-label">อีเมล</label>
+                                <input 
+                                    type="email" 
+                                    className="form-input" 
+                                    value={profileEmail} 
+                                    onChange={(e) => setProfileEmail(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-group btn-group-align" style={{ marginBottom: 0 }}>
+                                <button type="submit" className="btn btn-ghost btn-sm">
+                                    <Save style={{ width: 14, height: 14 }} />
+                                    อัปเดตและกรอง
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {/* My Tickets Container */}
+            <div className="results-header">
+                <span className="results-count">
+                    {loading ? 'กำลังโหลด...' : `พบปัญหาของคุณ ${tickets.length} รายการ`}
+                </span>
+            </div>
+            
+            <div id="my-tickets-container">
+                {loading ? (
+                    <p className="text-muted" style={{ textAlign: 'center', padding: '3rem' }}>กำลังโหลดปัญหาของคุณ...</p>
+                ) : (
+                    <TicketGrid tickets={tickets} />
+                )}
+            </div>
+        </div>
+    );
+}
