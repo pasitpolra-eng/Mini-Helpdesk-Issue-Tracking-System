@@ -10,9 +10,11 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { 
     ArrowLeft, Edit, XCircle, Trash2, ClipboardCheck, Settings, 
-    Save, Hash, Tag, MapPin, User, Mail, UserCheck, Calendar, Clock
+    Save, Hash, Tag, MapPin, User, Mail, UserCheck, Calendar, Clock,
+    Paperclip, FileText, QrCode, Printer
 } from 'lucide-react';
 import Link from 'next/link';
+import QRCode from 'qrcode';
 // DEFAULT_ISSUE_TYPES is loaded dynamically
 
 const STATUSES = {
@@ -54,6 +56,33 @@ const STAFF_MEMBERS = [
     'พิมพ์ใจ รักเรียน',
     'อนุชา เทคโน'
 ];
+
+const parseDescriptionAndAttachments = (rawDescription) => {
+    if (!rawDescription) return { cleanDescription: '', attachments: [] };
+
+    const attachments = [];
+    const attachmentRegex = /📎 \[(.*?)\]\((.*?)\)/g;
+    
+    let match;
+    const matches = [];
+    while ((match = attachmentRegex.exec(rawDescription)) !== null) {
+        matches.push({
+            fullMatch: match[0],
+            name: match[1],
+            url: match[2]
+        });
+    }
+
+    let cleanDescription = rawDescription;
+    matches.forEach(m => {
+        cleanDescription = cleanDescription.replace(m.fullMatch, '');
+    });
+
+    return {
+        cleanDescription: cleanDescription.trim(),
+        attachments: matches.map(m => ({ name: m.name, url: m.url }))
+    };
+};
 
 export default function TicketDetailPage({ params }) {
     const router = useRouter();
@@ -99,6 +128,122 @@ export default function TicketDetailPage({ params }) {
         fetchTicketData();
     }, [id]);
 
+    const [qrCodeUrl, setQrCodeUrl] = useState('');
+
+    useEffect(() => {
+        if (ticket && typeof window !== 'undefined') {
+            QRCode.toDataURL(window.location.href, { width: 180, margin: 2 })
+                .then(url => {
+                    setQrCodeUrl(url);
+                })
+                .catch(err => {
+                    console.error('Error generating QR code:', err);
+                });
+        }
+    }, [ticket]);
+
+    const handlePrintSingleTicket = (t) => {
+        const printWindow = window.open('', '_blank');
+        const html = `
+            <html>
+                <head>
+                    <title>รายงานตั๋วปัญหา - ${t.ticket_no}</title>
+                    <style>
+                        body { font-family: 'Sarabun', 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; line-height: 1.6; }
+                        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 30px; }
+                        .title { font-size: 24px; font-weight: bold; }
+                        .ticket-no { font-size: 18px; font-weight: bold; color: #3b82f6; font-family: monospace; }
+                        .section { margin-bottom: 20px; }
+                        .section-title { font-size: 16px; font-weight: bold; background: #f5f5f5; padding: 6px 12px; margin-bottom: 10px; border-left: 4px solid #3b82f6; }
+                        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+                        .label { font-weight: bold; color: #666; font-size: 13px; }
+                        .value { font-size: 14px; }
+                        .description { border: 1px solid #ddd; padding: 15px; border-radius: 6px; background: #fafafa; white-space: pre-wrap; font-size: 14px; }
+                        @media print {
+                            .print-btn { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div>
+                            <div class="title">ใบรายงานสถานะตั๋วปัญหา (Ticket Report)</div>
+                            <div style="font-size: 12px; color: #666;">พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}</div>
+                        </div>
+                        <div class="ticket-no">${t.ticket_no}</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">ข้อมูลปัญหา</div>
+                        <div style="margin-bottom: 10px;">
+                            <span class="label">หัวข้อปัญหา: </span>
+                            <span class="value" style="font-weight: bold; font-size: 16px;">${t.title}</span>
+                        </div>
+                        <div class="grid">
+                             <div>
+                                 <span class="label">ประเภทปัญหา: </span>
+                                 <span class="value">${t.issue_type}</span>
+                             </div>
+                             <div>
+                                 <span class="label">ระดับความเร่งด่วน: </span>
+                                 <span class="value">${t.priority}</span>
+                             </div>
+                             <div>
+                                 <span class="label">สถานที่เกิดเหตุ: </span>
+                                 <span class="value">${t.location || '-'}</span>
+                             </div>
+                             <div>
+                                 <span class="label">สถานะปัจจุบัน: </span>
+                                 <span class="value" style="font-weight: bold;">${t.status}</span>
+                             </div>
+                        </div>
+                        <div>
+                             <span class="label">รายละเอียดเพิ่มเติม:</span>
+                             <div class="description">${t.description.replace(/📎 \[(.*?)\]\((.*?)\)/g, '').trim() || 'ไม่มีรายละเอียดเพิ่มเติม'}</div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">ข้อมูลผู้แจ้งและผู้รับผิดชอบ</div>
+                        <div class="grid">
+                             <div>
+                                 <span class="label">ชื่อผู้แจ้ง: </span>
+                                 <span class="value">${t.requester_name}</span>
+                             </div>
+                             <div>
+                                 <span class="label">อีเมลผู้แจ้ง: </span>
+                                 <span class="value">${t.requester_email || '-'}</span>
+                             </div>
+                             <div>
+                                 <span class="label">ผู้รับผิดชอบ: </span>
+                                 <span class="value">${t.assigned_to || 'ยังไม่ได้มอบหมาย'}</span>
+                             </div>
+                             <div>
+                                 <span class="label">วันที่สร้างรายการ: </span>
+                                 <span class="value">${new Date(t.created_at).toLocaleString('th-TH')}</span>
+                             </div>
+                        </div>
+                    </div>
+
+                    ${t.resolution_note ? `
+                    <div class="section">
+                        <div class="section-title">บันทึกการดำเนินงาน / วิธีแก้ไข</div>
+                        <div class="description" style="border-left: 4px solid #22c55e;">${t.resolution_note}</div>
+                    </div>
+                    ` : ''}
+
+                    <div style="text-align: center; margin-top: 50px;">
+                        <button class="print-btn" onclick="window.print()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">พิมพ์รายงาน PDF</button>
+                    </div>
+                </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+    };
+
     if (loading) {
         return (
             <div className="page-detail fade-in" style={{ textAlign: 'center', padding: '5rem' }}>
@@ -118,6 +263,8 @@ export default function TicketDetailPage({ params }) {
             </div>
         );
     }
+
+    const { cleanDescription, attachments } = parseDescriptionAndAttachments(ticket.description);
 
     const statusColor = STATUS_COLORS[ticket.status] || STATUS_COLORS['Open'];
     const priorityColor = PRIORITY_COLORS[ticket.priority] || PRIORITY_COLORS['Medium'];
@@ -352,6 +499,10 @@ export default function TicketDetailPage({ params }) {
                     <h1 className="page-title">{ticket.ticket_no}</h1>
                 </div>
                 <div className="page-header-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-ghost" onClick={() => handlePrintSingleTicket(ticket)}>
+                        <Printer style={{ width: 16, height: 16 }} />
+                        พิมพ์รายงาน
+                    </button>
                     {canEdit && (
                         <button className="btn btn-ghost" onClick={showEditModal}>
                             <Edit style={{ width: 16, height: 16 }} />
@@ -396,8 +547,82 @@ export default function TicketDetailPage({ params }) {
 
                     <div className="detail-description">
                         <h3 className="detail-label">รายละเอียดปัญหา</h3>
-                        <p>{ticket.description}</p>
+                        <p style={{ whiteSpace: 'pre-wrap' }}>{cleanDescription || 'ไม่มีรายละเอียดเพิ่มเติม'}</p>
                     </div>
+
+                    {attachments.length > 0 && (
+                        <div className="detail-attachments" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>
+                            <h3 className="detail-label" style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '0.75rem' }}>
+                                <Paperclip style={{ width: 16, height: 16 }} />
+                                ไฟล์แนบ ({attachments.length})
+                            </h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                                {attachments.map((file, idx) => {
+                                    const isImage = /\.(jpeg|jpg|gif|png|webp|svg)$/i.test(file.name);
+                                    return (
+                                        <div key={idx} className="glass-card" style={{ 
+                                            padding: '0.75rem', 
+                                            borderRadius: '8px', 
+                                            border: '1px solid var(--border-color)',
+                                            background: 'rgba(255, 255, 255, 0.01)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '0.5rem'
+                                        }}>
+                                            {isImage ? (
+                                                <div style={{ 
+                                                    height: 120, 
+                                                    borderRadius: '4px', 
+                                                    overflow: 'hidden', 
+                                                    background: 'rgba(0,0,0,0.2)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}>
+                                                    <img 
+                                                        src={file.url} 
+                                                        alt={file.name} 
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div style={{ 
+                                                    height: 120, 
+                                                    borderRadius: '4px', 
+                                                    background: 'rgba(255,255,255,0.05)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: 'var(--text-secondary)'
+                                                }}>
+                                                    <FileText style={{ width: 36, height: 36 }} />
+                                                </div>
+                                            )}
+                                            <span style={{ 
+                                                fontSize: '0.85rem', 
+                                                fontWeight: 500, 
+                                                color: 'var(--text-primary)', 
+                                                overflow: 'hidden', 
+                                                textOverflow: 'ellipsis', 
+                                                whiteSpace: 'nowrap' 
+                                            }} title={file.name}>
+                                                {file.name}
+                                            </span>
+                                            <a 
+                                                href={file.url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="btn btn-ghost btn-sm"
+                                                style={{ width: '100%', justifyContent: 'center', fontSize: '0.8rem', padding: '2px 0', textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+                                            >
+                                                ดู / ดาวน์โหลด
+                                            </a>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {ticket.resolution_note && (
                         <div className="detail-resolution">
@@ -471,6 +696,22 @@ export default function TicketDetailPage({ params }) {
 
                 {/* Sidebar Info */}
                 <div className="detail-sidebar">
+                    <div className="detail-info-card glass-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '1.25rem' }}>
+                        <h3 className="detail-info-title" style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '0 0 0.75rem 0', alignSelf: 'flex-start' }}>
+                            <QrCode style={{ width: 14, height: 14 }} /> QR Code ติดตามสถานะ
+                        </h3>
+                        {qrCodeUrl ? (
+                            <div style={{ background: 'white', padding: '8px', borderRadius: '8px', display: 'inline-block', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                                <img src={qrCodeUrl} alt="Ticket QR Code" style={{ width: 130, height: 130, display: 'block' }} />
+                            </div>
+                        ) : (
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>กำลังสร้าง QR Code...</span>
+                        )}
+                        <span style={{ fontSize: '0.725rem', color: 'var(--text-secondary)', marginTop: '0.75rem', lineHeight: '1.4' }}>
+                            สแกนด้วยสมาร์ทโฟนเพื่อเปิดหน้าตั๋วปัญหานี้และติดตามสถานะได้ทันที
+                        </span>
+                    </div>
+
                     <div className="detail-info-card glass-card">
                         <h3 className="detail-info-title">ข้อมูล Ticket</h3>
                         <div className="detail-info-list">

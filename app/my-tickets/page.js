@@ -12,7 +12,7 @@ import { User, Plus, UserCircle, Save } from 'lucide-react';
 import { TicketGrid } from '@/components/TicketCard';
 
 export default function MyTicketsPage() {
-    const { user, setUser, toast } = useApp();
+    const { user, setUser, toast, isRealAuth } = useApp();
     
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,7 +24,11 @@ export default function MyTicketsPage() {
         setLoading(true);
         try {
             const params = new URLSearchParams();
-            params.append('requester_name', user.name);
+            if (isRealAuth) {
+                params.append('requester_email', user.email);
+            } else {
+                params.append('requester_name', user.name);
+            }
             
             const res = await fetch(`/api/tickets?${params.toString()}`);
             if (res.ok) {
@@ -46,10 +50,11 @@ export default function MyTicketsPage() {
 
     useEffect(() => {
         fetchMyTickets();
-    }, [user.name]);
+    }, [user.name, user.email, isRealAuth]);
 
     const handleProfileSubmit = (e) => {
         e.preventDefault();
+        if (isRealAuth) return;
         if (!profileName.trim()) {
             toast.error('กรุณากรอกชื่อผู้แจ้ง');
             return;
@@ -81,9 +86,11 @@ export default function MyTicketsPage() {
                     <UserCircle style={{ width: 48, height: 48, color: 'var(--primary-color)' }} />
                 </div>
                 <div className="profile-details">
-                    <h3>โปรไฟล์ผู้แจ้งปัญหาจำลอง</h3>
+                    <h3>{isRealAuth ? 'โปรไฟล์ผู้ใช้งานจริง (Supabase Auth)' : 'โปรไฟล์ผู้แจ้งปัญหาจำลอง'}</h3>
                     <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>
-                        ระบบระบุตัวตนของคุณจากชื่อผู้แจ้งด้านล่างนี้เพื่อกรองแสดงเฉพาะรายการของคุณ
+                        {isRealAuth 
+                            ? 'ระบบยืนยันตัวตนของคุณเรียบร้อยแล้วและคัดกรองข้อมูลปัญหาตามอีเมลจริงของคุณโดยอัตโนมัติเพื่อความปลอดภัย' 
+                            : 'ระบบระบุตัวตนของคุณจากชื่อผู้แจ้งด้านล่างนี้เพื่อกรองแสดงเฉพาะรายการของคุณ'}
                     </p>
                     
                     <form className="profile-form" onSubmit={handleProfileSubmit}>
@@ -96,6 +103,7 @@ export default function MyTicketsPage() {
                                     value={profileName} 
                                     onChange={(e) => setProfileName(e.target.value)}
                                     required 
+                                    disabled={isRealAuth}
                                 />
                             </div>
                             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -105,14 +113,17 @@ export default function MyTicketsPage() {
                                     className="form-input" 
                                     value={profileEmail} 
                                     onChange={(e) => setProfileEmail(e.target.value)}
+                                    disabled={isRealAuth}
                                 />
                             </div>
-                            <div className="form-group btn-group-align" style={{ marginBottom: 0 }}>
-                                <button type="submit" className="btn btn-ghost btn-sm">
-                                    <Save style={{ width: 14, height: 14 }} />
-                                    อัปเดตและกรอง
-                                </button>
-                            </div>
+                            {!isRealAuth && (
+                                <div className="form-group btn-group-align" style={{ marginBottom: 0 }}>
+                                    <button type="submit" className="btn btn-ghost btn-sm">
+                                        <Save style={{ width: 14, height: 14 }} />
+                                        อัปเดตและกรอง
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </form>
                 </div>

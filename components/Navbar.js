@@ -10,12 +10,12 @@ import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { 
     Headset, Home, PlusCircle, List, User, Shield, 
-    BarChart3, Settings, X, Menu, ShieldCheck, UserCircle 
+    BarChart3, Settings, X, Menu, ShieldCheck, UserCircle, LogIn, LogOut
 } from 'lucide-react';
 
 export default function Navbar() {
     const pathname = usePathname();
-    const { role, setRole } = useApp();
+    const { role, setRole, user, signOutUser, isRealAuth } = useApp();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const isAdmin = role === 'admin';
@@ -124,20 +124,44 @@ export default function Navbar() {
                 </nav>
 
                 <div className="sidebar-footer">
-                    <div className="sidebar-user-info">
-                        <div className="user-avatar">
-                            {isAdmin ? (
-                                <ShieldCheck style={{ width: 20, height: 20, color: 'var(--primary-color)' }} />
-                            ) : (
-                                <UserCircle style={{ width: 20, height: 20 }} />
-                            )}
+                    <div className="sidebar-user-info" style={{ flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch', width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div className="user-avatar">
+                                {isAdmin ? (
+                                    <ShieldCheck style={{ width: 20, height: 20, color: 'var(--primary-color)' }} />
+                                ) : (
+                                    <UserCircle style={{ width: 20, height: 20 }} />
+                                )}
+                            </div>
+                            <div className="user-details" style={{ overflow: 'hidden' }}>
+                                <span className="user-name" style={{ textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                    {user?.name || (isAdmin ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน')}
+                                </span>
+                                <span className={`user-role-badge ${isAdmin ? 'admin-badge' : 'user-badge'}`}>
+                                    {isAdmin ? 'Admin' : 'User'} {isRealAuth ? '(Auth)' : ''}
+                                </span>
+                            </div>
                         </div>
-                        <div className="user-details">
-                            <span className="user-name">{isAdmin ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}</span>
-                            <span className={`user-role-badge ${isAdmin ? 'admin-badge' : 'user-badge'}`}>
-                                {isAdmin ? 'Admin' : 'User'}
-                            </span>
-                        </div>
+                        {isRealAuth ? (
+                            <button 
+                                onClick={signOutUser}
+                                className="btn btn-ghost btn-sm"
+                                style={{ width: '100%', justifyContent: 'center', padding: '0.4rem', fontSize: '0.85rem', color: '#f87171', display: 'flex', alignItems: 'center' }}
+                            >
+                                <LogOut style={{ width: 14, height: 14, marginRight: 6 }} />
+                                ออกจากระบบ
+                            </button>
+                        ) : (
+                            <Link 
+                                href="/login" 
+                                className="btn btn-primary btn-sm"
+                                style={{ width: '100%', justifyContent: 'center', padding: '0.4rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', textDecoration: 'none' }}
+                                onClick={() => setSidebarOpen(false)}
+                            >
+                                <LogIn style={{ width: 14, height: 14, marginRight: 6 }} />
+                                เข้าสู่ระบบ (Supabase)
+                            </Link>
+                        )}
                     </div>
                 </div>
             </aside>

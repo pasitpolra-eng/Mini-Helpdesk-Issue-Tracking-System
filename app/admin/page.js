@@ -8,10 +8,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
+import Link from 'next/link';
 import { 
     Shield, Clock, AlertTriangle, UserMinus, Search, X, 
     CheckSquare, Trash2, Eye, Edit, Inbox, MapPin, User,
-    Calendar, Save, MessageSquare, ClipboardCheck, Tag, Info, UserCheck
+    Calendar, Save, MessageSquare, ClipboardCheck, Tag, Info, UserCheck, Settings,
+    FileText, Printer
 } from 'lucide-react';
 import { timeAgo } from '@/components/TicketCard';
 // DEFAULT_ISSUE_TYPES is loaded dynamically
@@ -168,6 +170,110 @@ export default function AdminManagementPage() {
         setStatus('');
         setPriority('');
         setAssigneeFilter('');
+    };
+
+    const handleExportCSV = (ticketsList) => {
+        const headers = ['Ticket ID', 'Title', 'Description', 'Category', 'Priority', 'Status', 'Location', 'Requester Name', 'Requester Email', 'Assigned To', 'Created At', 'Updated At'];
+        const rows = ticketsList.map(t => [
+            t.ticket_no,
+            t.title,
+            t.description ? t.description.replace(/"/g, '""').replace(/\n/g, ' ') : '',
+            t.issue_type,
+            t.priority,
+            t.status,
+            t.location || '',
+            t.requester_name,
+            t.requester_email || '',
+            t.assigned_to || '',
+            t.created_at,
+            t.updated_at
+        ]);
+
+        const csvContent = "\uFEFF" + [
+            headers.join(','),
+            ...rows.map(e => e.map(val => `"${val}"`).join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `admin_tickets_report_${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handlePrintPDF = (ticketsList) => {
+        const printWindow = window.open('', '_blank');
+        const tableRows = ticketsList.map(t => `
+            <tr>
+                <td style="font-family: monospace; font-weight: bold;">${t.ticket_no}</td>
+                <td>
+                    <div style="font-weight: bold;">${t.title}</div>
+                    <div style="font-size: 0.8rem; color: #666;">${t.location || '-'}</div>
+                </td>
+                <td>${t.issue_type}</td>
+                <td>${t.priority}</td>
+                <td>${t.status}</td>
+                <td>${t.assigned_to || '-'}</td>
+                <td>${new Date(t.created_at).toLocaleDateString('th-TH')}</td>
+            </tr>
+        `).join('');
+
+        const html = `
+            <html>
+                <head>
+                    <title>รายงานรายการตั๋วปัญหาสำหรับเจ้าหน้าที่ - Mini Helpdesk</title>
+                    <style>
+                        body { font-family: 'Sarabun', 'Helvetica Neue', Arial, sans-serif; padding: 20px; color: #333; }
+                        h1 { font-size: 20px; margin-bottom: 5px; }
+                        .meta { font-size: 12px; color: #666; margin-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+                        th { background-color: #f5f5f5; font-weight: bold; }
+                        tr:nth-child(even) { background-color: #fafafa; }
+                        @media print {
+                            .print-btn { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                     <div style="display: flex; justify-content: space-between; align-items: center;">
+                         <h1>รายงานตั๋วปัญหา Mini Helpdesk (เจ้าหน้าที่)</h1>
+                         <button class="print-btn" onclick="window.print()" style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">พิมพ์ PDF</button>
+                     </div>
+                     <div class="meta">
+                         พิมพ์โดย: เจ้าหน้าที่ระบบ | วันที่: ${new Date().toLocaleString('th-TH')} | จำนวนทั้งหมด: ${ticketsList.length} รายการ
+                     </div>
+                     <table>
+                         <thead>
+                             <tr>
+                                 <th>Ticket ID</th>
+                                 <th>หัวข้อ / สถานที่</th>
+                                 <th>ประเภท</th>
+                                 <th>ระดับ</th>
+                                 <th>สถานะ</th>
+                                 <th>ผู้รับผิดชอบ</th>
+                                 <th>วันที่แจ้ง</th>
+                             </tr>
+                         </thead>
+                         <tbody>
+                             ${tableRows}
+                         </tbody>
+                     </table>
+                     <script>
+                         window.onload = function() {
+                             setTimeout(() => { window.print(); }, 500);
+                         }
+                     </script>
+                </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
     };
 
     // Inline Update Actions
@@ -455,6 +561,12 @@ export default function AdminManagementPage() {
                     </h1>
                     <p className="page-subtitle">ดูรายละเอียด มอบหมายงาน และอัปเดตสถานะปัญหาทั้งหมดในระบบ</p>
                 </div>
+                <div className="page-header-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Link href="/admin/settings" className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
+                        <Settings style={{ width: 16, height: 16 }} />
+                        ตั้งค่าแจ้งเตือน
+                    </Link>
+                </div>
             </div>
 
             {/* Admin Overview Cards */}
@@ -575,6 +687,32 @@ export default function AdminManagementPage() {
                     </div>
                 </div>
             )}
+
+            <div className="results-header" style={{ display: 'flex', justifycontent: 'space-between', alignitems: 'center', marginbottom: '1rem' }}>
+                <span className="results-count">
+                    {loading ? 'กำลังค้นหา...' : `พบรายการตั๋วปัญหา ${filteredTickets.length} รายการ`}
+                </span>
+                {!loading && filteredTickets.length > 0 && (
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button 
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => handleExportCSV(filteredTickets)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                        >
+                            <FileText style={{ width: 14, height: 14 }} />
+                            ส่งออก CSV
+                        </button>
+                        <button 
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => handlePrintPDF(filteredTickets)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                        >
+                            <Printer style={{ width: 14, height: 14 }} />
+                            พิมพ์ตาราง PDF
+                        </button>
+                    </div>
+                )}
+            </div>
 
             {/* Main Table Card */}
             <div className="table-card glass-card">

@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/db';
+import { NotificationService } from '@/lib/notifications';
 
 export async function GET(request) {
     try {
@@ -15,6 +16,7 @@ export async function GET(request) {
         const issue_type = searchParams.get('issue_type');
         const assigned_to = searchParams.get('assigned_to');
         const requester_name = searchParams.get('requester_name');
+        const requester_email = searchParams.get('requester_email');
 
         let tickets = await DbService.getTickets();
 
@@ -51,6 +53,10 @@ export async function GET(request) {
             tickets = tickets.filter(t => t.requester_name.toLowerCase().trim() === requester_name.toLowerCase().trim());
         }
 
+        if (requester_email) {
+            tickets = tickets.filter(t => t.requester_email && t.requester_email.toLowerCase().trim() === requester_email.toLowerCase().trim());
+        }
+
         return NextResponse.json(tickets);
     } catch (e) {
         console.error('API Error in GET /api/tickets:', e);
@@ -68,6 +74,10 @@ export async function POST(request) {
         }
 
         const newTicket = await DbService.createTicket(body);
+        
+        // Dispatch notifications (async)
+        await NotificationService.dispatch(newTicket, 'create');
+
         return NextResponse.json(newTicket, { status: 201 });
     } catch (e) {
         console.error('API Error in POST /api/tickets:', e);

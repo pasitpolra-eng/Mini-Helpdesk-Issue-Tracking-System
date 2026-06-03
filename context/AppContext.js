@@ -8,14 +8,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ToastContainer, ToastElement } from '@/components/Toast';
 import { ModalContainer } from '@/components/Modal';
+import { supabase } from '@/lib/db';
 
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
-    // ── Simulated Role ──────────────────────────────────────
+    // ── Simulated or Real Role ──────────────────────────────────────
     const [role, setRoleState] = useState('user');
     
-    // ── Simulated User Profile ──────────────────────────────
+    // ── Simulated or Real User Profile ──────────────────────────────
     const [user, setUserState] = useState({ name: 'นักศึกษา ทดสอบ', email: 'student@example.com' });
     
     // ── Toast Notifications State ───────────────────────────
@@ -24,10 +25,9 @@ export function AppProvider({ children }) {
     // ── Modal Confirmation Dialog State ──────────────────────
     const [modal, setModal] = useState(null);
 
-    // Initial load from localStorage (Client-only)
-    useEffect(() => {
-        const storedRole = localStorage.getItem('helpdesk_current_role');
-        if (storedRole) setRoleState(storedRole);
+    const loadSimulatedUser = () => {
+        const storedRole = localStorage.getItem('helpdesk_current_role') || 'user';
+        setRoleState(storedRole);
 
         const storedUser = localStorage.getItem('helpdesk_current_user');
         if (storedUser) {
@@ -35,9 +35,82 @@ export function AppProvider({ children }) {
                 setUserState(JSON.parse(storedUser));
             } catch (e) {
                 console.error(e);
+                setUserState({ name: 'นักศึกษา ทดสอบ', email: 'student@example.com' });
             }
+        } else {
+            setUserState({ name: 'นักศึกษา ทดสอบ', email: 'student@example.com' });
         }
+    };
+
+    const updateUserFromSession = (session) => {
+        if (!session || !session.user) return;
+        const userEmail = session.user.email;
+        const userName = session.user.user_metadata?.full_name || userEmail.split('@')[0];
+        setUserState({
+            name: userName,
+            email: userEmail,
+            id: session.user.id
+        });
+
+        // Determine role based on email content
+        const isAdmin = userEmail.toLowerCase().includes('admin') || userEmail.toLowerCase() === 'admin@example.com';
+        setRoleState(isAdmin ? 'admin' : 'user');
+    };
+
+    // Auth state changes
+    useEffect(() => {
+        // Get initial session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                updateUserFromSession(session);
+            } else {
+                loadSimulatedUser();
+            }
+        });
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session) {
+                updateUserFromSession(session);
+            } else {
+                loadSimulatedUser();
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
+
+    // Auth methods
+    const loginWithEmail = async (email, password) => {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        return data;
+    };
+
+    const signUpWithEmail = async (email, password, fullName) => {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: fullName
+                }
+            }
+        });
+        if (error) throw error;
+        return data;
+    };
+
+    const signOutUser = async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        // reset to simulated guest defaults
+        localStorage.removeItem('helpdesk_current_user');
+        localStorage.removeItem('helpdesk_current_role');
+        loadSimulatedUser();
+    };
 
     const setRole = (newRole) => {
         setRoleState(newRole);
@@ -108,7 +181,11 @@ export function AppProvider({ children }) {
             toast: toastHelpers,
             confirm,
             closeModal,
-            modal
+            modal,
+            loginWithEmail,
+            signUpWithEmail,
+            signOutUser,
+            isRealAuth: !!(user && user.id)
         }}>
             {children}
             

@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/db';
+import { NotificationService } from '@/lib/notifications';
 
 export async function GET(request, { params }) {
     try {
@@ -34,6 +35,10 @@ export async function PATCH(request, { params }) {
         }
 
         const updatedTicket = await DbService.updateTicket(id, body);
+        
+        // Dispatch notifications (async)
+        await NotificationService.dispatch(updatedTicket, 'update');
+
         return NextResponse.json(updatedTicket);
     } catch (e) {
         console.error(`API Error in PATCH /api/tickets/${params.id}:`, e);
