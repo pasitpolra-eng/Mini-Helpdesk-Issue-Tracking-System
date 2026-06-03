@@ -6,10 +6,19 @@
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
     try {
         const types = await DbService.getIssueTypes();
-        return NextResponse.json(types);
+        return NextResponse.json(types, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+            }
+        });
     } catch (e) {
         console.error('API Error in GET /api/issue-types:', e);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

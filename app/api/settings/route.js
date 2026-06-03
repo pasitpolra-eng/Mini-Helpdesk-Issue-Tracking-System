@@ -17,21 +17,30 @@ const ensureDataFolder = () => {
     }
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
     try {
         ensureDataFolder();
-        if (fs.existsSync(settingsPath)) {
-            const data = fs.readFileSync(settingsPath, 'utf8');
-            return NextResponse.json(JSON.parse(data));
-        }
-        
-        // Return default empty settings
-        return NextResponse.json({
+        let settings = {
             discord_webhook_url: '',
             emailjs_service_id: '',
             emailjs_template_id: '',
             emailjs_public_key: '',
             emailjs_private_key: ''
+        };
+        if (fs.existsSync(settingsPath)) {
+            const data = fs.readFileSync(settingsPath, 'utf8');
+            settings = JSON.parse(data);
+        }
+        
+        return NextResponse.json(settings, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+            }
         });
     } catch (e) {
         console.error('API Error in GET /api/settings:', e);

@@ -7,6 +7,9 @@ import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/db';
 import { NotificationService } from '@/lib/notifications';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -57,7 +60,13 @@ export async function GET(request) {
             tickets = tickets.filter(t => t.requester_email && t.requester_email.toLowerCase().trim() === requester_email.toLowerCase().trim());
         }
 
-        return NextResponse.json(tickets);
+        return NextResponse.json(tickets, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+            }
+        });
     } catch (e) {
         console.error('API Error in GET /api/tickets:', e);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

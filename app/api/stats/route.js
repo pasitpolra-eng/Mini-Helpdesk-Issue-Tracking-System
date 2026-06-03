@@ -6,6 +6,11 @@
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/db';
 
+// Force dynamic rendering — always query the live database
+export const dynamic = 'force-dynamic';
+
+export const revalidate = 0;
+
 export async function GET() {
     try {
         const [tickets, issueTypes] = await Promise.all([
@@ -54,7 +59,13 @@ export async function GET() {
             }
         });
 
-        return NextResponse.json(stats);
+        return NextResponse.json(stats, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+            }
+        });
     } catch (e) {
         console.error('API Error in GET /api/stats:', e);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

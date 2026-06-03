@@ -229,7 +229,7 @@ export default function AdminSettingsPage() {
                     }}>
                         <AlertCircle style={{ width: 18, height: 18, color: '#f87171', flexShrink: 0, marginTop: 2 }} />
                         <span style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.4' }}>
-                            **คำแนะนำการตั้งค่าอีเมล:** ใน EmailJS template ของคุณ ควรใช้ตัวแปร `{{subject}}`, `{{to_email}}`, `{{to_name}}`, `{{message}}` เป็นตัวรับข้อมูลหลักเพื่อรับหัวเรื่อง รายชื่อผู้รับ และข้อความเนื้อหารายละเอียดที่ระบบหลังบ้านส่งเข้าไป
+                            <strong>คำแนะนำการตั้งค่าอีเมล:</strong> ใน EmailJS template ของคุณ ควรใช้ตัวแปร <code>{"{{subject}}"}</code>, <code>{"{{to_email}}"}</code>, <code>{"{{to_name}}"}</code>, <code>{"{{message}}"}</code> เป็นตัวรับข้อมูลหลักเพื่อรับหัวเรื่อง รายชื่อผู้รับ และข้อความเนื้อหารายละเอียดที่ระบบหลังบ้านส่งเข้าไป
                         </span>
                     </div>
                 </div>
