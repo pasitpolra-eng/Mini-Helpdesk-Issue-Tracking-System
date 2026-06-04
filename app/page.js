@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
-    Headset, PlusCircle, List, CheckCircle, Clock, 
+    PlusCircle, List, CheckCircle, Clock, 
     AlertCircle, Ticket, CircleDot, Loader, CheckCircle2, 
     Zap, Edit3, Wrench 
 } from 'lucide-react';
@@ -45,7 +45,7 @@ export default function HomePage() {
             <section className="hero-section">
                 <div className="hero-content">
                     <div className="hero-badge">
-                        <Headset style={{ width: 16, height: 16 }} />
+                        <img src="/front-desk_17210386.png" alt="Mini Helpdesk" style={{ width: 18, height: 18 }} />
                         Mini Helpdesk System
                     </div>
                     <h1 className="hero-title">

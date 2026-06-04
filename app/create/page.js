@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-import { PlusCircle, Info, User, Send, Loader } from 'lucide-react';
+import { PlusCircle, Info, User, Send, Loader, UploadCloud, FileText, X, Image as ImageIcon } from 'lucide-react';
 export default function CreateTicketPage() {
     const router = useRouter();
     const { user, setUser, toast, confirm, isRealAuth } = useApp();
@@ -213,82 +213,150 @@ export default function CreateTicketPage() {
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">ไฟล์แนบ (รูปภาพ หรือ เอกสาร) <span className="optional">(ตัวเลือกเสริม)</span></label>
-                        <div 
-                            className="file-upload-zone"
-                            style={{
-                                border: '2px dashed var(--border-color)',
-                                borderRadius: '8px',
-                                padding: '2rem 1.5rem',
-                                textAlign: 'center',
-                                background: 'rgba(255, 255, 255, 0.02)',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                            }}
-                            onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--primary-color)'; }}
-                            onDragLeave={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--border-color)'; }}
-                            onDrop={async (e) => {
-                                e.preventDefault();
-                                e.currentTarget.style.borderColor = 'var(--border-color)';
-                                const files = Array.from(e.dataTransfer.files);
-                                if (files.length > 0) handleFileUpload(files[0]);
-                            }}
-                            onClick={() => document.getElementById('file-input').click()}
-                        >
-                            <input 
-                                type="file" 
-                                id="file-input" 
-                                style={{ display: 'none' }} 
-                                onChange={(e) => {
-                                    const files = Array.from(e.target.files);
+                        <label className="form-label">ไฟล์แนบ <span className="optional">(ตัวเลือกเสริม)</span></label>
+                        <div style={{
+                            border: '1.5px dashed rgba(99, 102, 241, 0.25)',
+                            borderRadius: '10px',
+                            overflow: 'hidden',
+                            transition: 'all 0.25s ease',
+                        }}>
+                            <div 
+                                className="file-upload-zone"
+                                style={{
+                                    padding: '1.25rem 1.5rem',
+                                    background: 'rgba(99, 102, 241, 0.02)',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.25s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '1rem',
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'rgba(99, 102, 241, 0.05)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(99, 102, 241, 0.02)';
+                                }}
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.currentTarget.parentElement.style.borderColor = 'var(--primary-color)';
+                                    e.currentTarget.style.background = 'rgba(99, 102, 241, 0.08)';
+                                }}
+                                onDragLeave={(e) => {
+                                    e.preventDefault();
+                                    e.currentTarget.parentElement.style.borderColor = 'rgba(99, 102, 241, 0.25)';
+                                    e.currentTarget.style.background = 'rgba(99, 102, 241, 0.02)';
+                                }}
+                                onDrop={async (e) => {
+                                    e.preventDefault();
+                                    e.currentTarget.parentElement.style.borderColor = 'rgba(99, 102, 241, 0.25)';
+                                    e.currentTarget.style.background = 'rgba(99, 102, 241, 0.02)';
+                                    const files = Array.from(e.dataTransfer.files);
                                     if (files.length > 0) handleFileUpload(files[0]);
                                 }}
-                            />
-                            <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-                                ลากและวางไฟล์ที่นี่ หรือ <span style={{ color: 'var(--primary-color)', fontWeight: 600 }}>คลิกเพื่อเลือกไฟล์</span>
-                            </p>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginTop: 4 }}>
-                                รองรับรูปภาพ, PDF, เอกสาร (สูงสุด 10MB)
-                            </span>
-                        </div>
-
-                        {uploadingFile && (
-                            <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)' }}>
-                                <Loader className="animate-spin" style={{ width: 16, height: 16 }} />
-                                <span>กำลังอัปโหลดไฟล์...</span>
+                                onClick={() => document.getElementById('file-input').click()}
+                            >
+                                <input 
+                                    type="file" 
+                                    id="file-input" 
+                                    style={{ display: 'none' }} 
+                                    onChange={(e) => {
+                                        const files = Array.from(e.target.files);
+                                        if (files.length > 0) handleFileUpload(files[0]);
+                                    }}
+                                />
+                                <div style={{
+                                    width: 40, height: 40, borderRadius: '10px', flexShrink: 0,
+                                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.12))',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    <UploadCloud style={{ width: 20, height: 20, color: '#818cf8' }} />
+                                </div>
+                                <div style={{ flex: 1, textAlign: 'left' }}>
+                                    <p style={{ margin: '0 0 2px', color: 'var(--text-primary)', fontWeight: 500, fontSize: '0.88rem' }}>
+                                        ลากและวางไฟล์ที่นี่ หรือ <span style={{ color: '#818cf8', fontWeight: 600 }}>คลิกเพื่อเลือก</span>
+                                    </p>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginTop: '4px' }}>
+                                        {['รูปภาพ', 'PDF', 'เอกสาร'].map((type) => (
+                                            <span key={type} style={{
+                                                fontSize: '0.65rem', padding: '1px 7px', borderRadius: '100px',
+                                                background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.07)',
+                                                color: 'var(--text-secondary)',
+                                            }}>{type}</span>
+                                        ))}
+                                        <span style={{
+                                            fontSize: '0.65rem', padding: '1px 7px', borderRadius: '100px',
+                                            background: 'rgba(245, 158, 11, 0.06)', border: '1px solid rgba(245, 158, 11, 0.15)',
+                                            color: '#fbbf24',
+                                        }}>สูงสุด 10MB</span>
+                                    </div>
+                                </div>
                             </div>
-                        )}
 
-                        {uploadedFiles.length > 0 && (
-                            <div className="uploaded-files-list" style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                {uploadedFiles.map((file, idx) => (
-                                    <div key={idx} style={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        justifyContent: 'space-between',
-                                        padding: '0.5rem 0.75rem',
-                                        background: 'rgba(255, 255, 255, 0.05)',
-                                        borderRadius: '6px',
-                                        border: '1px solid var(--border-color)'
+                            {uploadingFile && (
+                                <div style={{
+                                    padding: '0.6rem 1.5rem',
+                                    display: 'flex', alignItems: 'center', gap: 10,
+                                    background: 'rgba(99, 102, 241, 0.04)',
+                                    borderTop: '1px solid rgba(99, 102, 241, 0.1)',
+                                    color: '#a5b4fc',
+                                }}>
+                                    <Loader className="animate-spin" style={{ width: 14, height: 14 }} />
+                                    <span style={{ fontSize: '0.82rem' }}>กำลังอัปโหลดไฟล์...</span>
+                                </div>
+                            )}
+
+                            {uploadedFiles.length > 0 && uploadedFiles.map((file, idx) => {
+                                const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.name);
+                                return (
+                                    <div key={idx} style={{
+                                        display: 'flex', alignItems: 'center', gap: '0.65rem',
+                                        padding: '0.5rem 1.5rem',
+                                        background: 'rgba(255, 255, 255, 0.02)',
+                                        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                                        transition: 'all 0.2s',
                                     }}>
-                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>
-                                            📎 {file.name}
+                                        <div style={{
+                                            width: 28, height: 28, borderRadius: '6px',
+                                            background: isImage ? 'rgba(34, 197, 94, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                        }}>
+                                            {isImage
+                                                ? <ImageIcon style={{ width: 14, height: 14, color: '#4ade80' }} />
+                                                : <FileText style={{ width: 14, height: 14, color: '#60a5fa' }} />
+                                            }
+                                        </div>
+                                        <span style={{
+                                            fontSize: '0.82rem', color: 'var(--text-primary)',
+                                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+                                        }}>
+                                            {file.name}
                                         </span>
-                                        <button 
-                                            type="button" 
-                                            className="btn btn-danger-ghost btn-sm" 
-                                            style={{ padding: '2px 8px', minHeight: 'auto', height: 24, fontSize: '0.8rem' }}
+                                        <button
+                                            type="button"
+                                            style={{
+                                                background: 'rgba(239, 68, 68, 0.08)',
+                                                border: '1px solid rgba(239, 68, 68, 0.2)',
+                                                borderRadius: '6px',
+                                                width: 24, height: 24,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0, padding: 0,
+                                                color: '#f87171',
+                                            }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'; }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setUploadedFiles(prev => prev.filter((_, i) => i !== idx));
                                             }}
+                                            title="ลบไฟล์"
                                         >
-                                            ลบ
+                                            <X style={{ width: 12, height: 12 }} />
                                         </button>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                );
+                            })}
+                        </div>
                     </div>
 
                     <div className="form-row">

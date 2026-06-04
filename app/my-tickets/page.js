@@ -88,7 +88,7 @@ export default function MyTicketsPage() {
                     <UserCircle style={{ width: 48, height: 48, color: 'var(--primary-color)' }} />
                 </div>
                 <div className="profile-details">
-                    <h3>{isRealAuth ? 'โปรไฟล์ผู้ใช้งานจริง (Supabase Auth)' : 'โปรไฟล์ผู้แจ้งปัญหาจำลอง'}</h3>
+                    <h3>{isRealAuth ? 'โปรไฟล์ผู้ใช้งานจริง (Supabase Auth)' : 'โปรไฟล์ผู้แจ้งปัญหา'}</h3>
                     <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>
                         {isRealAuth 
                             ? 'ระบบยืนยันตัวตนของคุณเรียบร้อยแล้วและคัดกรองข้อมูลปัญหาตามอีเมลจริงของคุณโดยอัตโนมัติเพื่อความปลอดภัย' 

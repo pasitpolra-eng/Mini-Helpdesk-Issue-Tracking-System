@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import {
-    Headset, Home, PlusCircle, List, User, Shield,
+    Home, PlusCircle, List, User, Shield,
     BarChart3, Settings, X, Menu, ShieldCheck, UserCircle, LogIn, LogOut
 } from 'lucide-react';
 
@@ -62,7 +62,7 @@ export default function Navbar() {
                     <Menu style={{ width: 22, height: 22 }} />
                 </button>
                 <div className="mobile-logo" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Headset style={{ width: 20, height: 20 }} />
+                    <img src="/front-desk_17210386.png" alt="Mini Helpdesk" style={{ width: 22, height: 22 }} />
                     <span style={{ fontWeight: 600 }}>Mini Helpdesk</span>
                 </div>
                 <div className="mobile-role-indicator">
@@ -77,7 +77,7 @@ export default function Navbar() {
                 <div className="sidebar-header">
                     <div className="sidebar-logo">
                         <div className="logo-icon">
-                            <Headset style={{ width: 24, height: 24 }} />
+                            <img src="/front-desk_17210386.png" alt="Mini Helpdesk" style={{ width: 28, height: 28 }} />
                         </div>
                         <div className="logo-text">
                             <h1>Mini Helpdesk</h1>

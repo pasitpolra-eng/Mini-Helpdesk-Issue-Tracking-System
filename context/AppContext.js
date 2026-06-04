@@ -128,18 +128,18 @@ export function AppProvider({ children }) {
     };
 
     const signUpWithEmail = async (email, password, fullName, userGroup = 'นักศึกษา') => {
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    full_name: fullName,
-                    user_group: userGroup
-                }
-            }
+        const response = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password, fullName, userGroup }),
         });
-        if (error) throw error;
-        return data;
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || 'เกิดข้อผิดพลาดในการสมัครสมาชิก');
+        }
+        return result.user;
     };
 
     const signOutUser = async () => {
