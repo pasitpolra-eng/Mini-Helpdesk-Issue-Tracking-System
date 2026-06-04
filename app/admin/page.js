@@ -58,6 +58,15 @@ const STAFF_MEMBERS = [
     'อนุชา เทคโน'
 ];
 
+const parseRequester = (fullName) => {
+    if (!fullName) return { name: '', group: '' };
+    const match = fullName.match(/^(.*?)\s*\((นักศึกษา|อาจารย์|เจ้าหน้าที่|เจ้าหน้าที่ผู้รับผิดชอบงาน IT หรือผู้ดูแลอุปกรณ์|ผู้ดูแลระบบ)\)$/);
+    if (match) {
+        return { name: match[1], group: match[2] };
+    }
+    return { name: fullName, group: 'นักศึกษา' };
+};
+
 export default function AdminManagementPage() {
     const router = useRouter();
     const { role, toast, confirm } = useApp();
@@ -77,6 +86,7 @@ export default function AdminManagementPage() {
     const [status, setStatus] = useState('');
     const [priority, setPriority] = useState('');
     const [assigneeFilter, setAssigneeFilter] = useState('');
+    const [requesterGroupFilter, setRequesterGroupFilter] = useState('');
 
     // Check Role Guard
     useEffect(() => {
@@ -162,6 +172,12 @@ export default function AdminManagementPage() {
             }
         }
 
+        // Requester Group Match
+        if (requesterGroupFilter) {
+            const parsed = parseRequester(t.requester_name);
+            if (parsed.group !== requesterGroupFilter) return false;
+        }
+
         return true;
     });
 
@@ -170,24 +186,29 @@ export default function AdminManagementPage() {
         setStatus('');
         setPriority('');
         setAssigneeFilter('');
+        setRequesterGroupFilter('');
     };
 
     const handleExportCSV = (ticketsList) => {
-        const headers = ['Ticket ID', 'Title', 'Description', 'Category', 'Priority', 'Status', 'Location', 'Requester Name', 'Requester Email', 'Assigned To', 'Created At', 'Updated At'];
-        const rows = ticketsList.map(t => [
-            t.ticket_no,
-            t.title,
-            t.description ? t.description.replace(/"/g, '""').replace(/\n/g, ' ') : '',
-            t.issue_type,
-            t.priority,
-            t.status,
-            t.location || '',
-            t.requester_name,
-            t.requester_email || '',
-            t.assigned_to || '',
-            t.created_at,
-            t.updated_at
-        ]);
+        const headers = ['Ticket ID', 'Title', 'Description', 'Category', 'Priority', 'Status', 'Location', 'Requester Name', 'Requester Group', 'Requester Email', 'Assigned To', 'Created At', 'Updated At'];
+        const rows = ticketsList.map(t => {
+            const parsed = parseRequester(t.requester_name);
+            return [
+                t.ticket_no,
+                t.title,
+                t.description ? t.description.replace(/"/g, '""').replace(/\n/g, ' ') : '',
+                t.issue_type,
+                t.priority,
+                t.status,
+                t.location || '',
+                parsed.name,
+                parsed.group || 'นักศึกษา',
+                t.requester_email || '',
+                t.assigned_to || '',
+                t.created_at,
+                t.updated_at
+            ];
+        });
 
         const csvContent = "\uFEFF" + [
             headers.join(','),
@@ -206,20 +227,23 @@ export default function AdminManagementPage() {
 
     const handlePrintPDF = (ticketsList) => {
         const printWindow = window.open('', '_blank');
-        const tableRows = ticketsList.map(t => `
-            <tr>
-                <td style="font-family: monospace; font-weight: bold;">${t.ticket_no}</td>
-                <td>
-                    <div style="font-weight: bold;">${t.title}</div>
-                    <div style="font-size: 0.8rem; color: #666;">${t.location || '-'}</div>
-                </td>
-                <td>${t.issue_type}</td>
-                <td>${t.priority}</td>
-                <td>${t.status}</td>
-                <td>${t.assigned_to || '-'}</td>
-                <td>${new Date(t.created_at).toLocaleDateString('th-TH')}</td>
-            </tr>
-        `).join('');
+        const tableRows = ticketsList.map(t => {
+            const parsed = parseRequester(t.requester_name);
+            return `
+                <tr>
+                    <td style="font-family: monospace; font-weight: bold;">${t.ticket_no}</td>
+                    <td>
+                        <div style="font-weight: bold;">${t.title}</div>
+                        <div style="font-size: 0.8rem; color: #666;">ผู้แจ้ง: ${parsed.name} (${parsed.group || 'นักศึกษา'}) | สถานที่: ${t.location || '-'}</div>
+                    </td>
+                    <td>${t.issue_type}</td>
+                    <td>${t.priority}</td>
+                    <td>${t.status}</td>
+                    <td>${t.assigned_to || '-'}</td>
+                    <td>${new Date(t.created_at).toLocaleDateString('th-TH')}</td>
+                </tr>
+            `;
+        }).join('');
 
         const html = `
             <html>
@@ -641,6 +665,18 @@ export default function AdminManagementPage() {
                             <option key={s} value={s}>{s}</option>
                         ))}
                     </select>
+                    <select 
+                        className="form-input form-select"
+                        value={requesterGroupFilter}
+                        onChange={(e) => setRequesterGroupFilter(e.target.value)}
+                    >
+                        <option value="">ทุกกลุ่มผู้ใช้</option>
+                        <option value="นักศึกษา">นักศึกษา</option>
+                        <option value="อาจารย์">อาจารย์</option>
+                        <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                        <option value="เจ้าหน้าที่ผู้รับผิดชอบงาน IT หรือผู้ดูแลอุปกรณ์">เจ้าหน้าที่ IT / ผู้ดูแลอุปกรณ์</option>
+                        <option value="ผู้ดูแลระบบ">ผู้ดูแลระบบ</option>
+                    </select>
                     <button className="btn btn-ghost btn-sm" onClick={clearFilters}>
                         <X style={{ width: 14, height: 14 }} />
                         ล้างตัวกรอง
@@ -805,8 +841,22 @@ export default function AdminManagementPage() {
                                                 </select>
                                             </td>
                                             <td onClick={() => handleOpenDetailModal(ticket)} style={{ cursor: 'pointer' }}>
-                                                <div className="table-user-name">{ticket.requester_name}</div>
-                                                <div className="table-user-date">{timeAgo(ticket.created_at)}</div>
+                                                <div className="table-user-name" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                    <span>{parseRequester(ticket.requester_name).name}</span>
+                                                    <span className="user-role-badge" style={{
+                                                        alignSelf: 'flex-start',
+                                                        padding: '1px 6px',
+                                                        borderRadius: '3px',
+                                                        fontSize: '0.7rem',
+                                                        fontWeight: 600,
+                                                        background: 'rgba(59, 130, 246, 0.1)',
+                                                        color: '#60a5fa',
+                                                        border: '1px solid rgba(59, 130, 246, 0.2)'
+                                                    }}>
+                                                        {parseRequester(ticket.requester_name).group || 'นักศึกษา'}
+                                                    </span>
+                                                </div>
+                                                <div className="table-user-date" style={{ marginTop: 4 }}>{timeAgo(ticket.created_at)}</div>
                                             </td>
                                             <td onClick={(e) => e.stopPropagation()}>
                                                 <div className="table-actions">

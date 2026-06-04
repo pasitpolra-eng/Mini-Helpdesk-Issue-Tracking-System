@@ -17,6 +17,7 @@ export default function SignupPage() {
 
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
+    const [userGroup, setUserGroup] = useState('นักศึกษา');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -35,7 +36,7 @@ export default function SignupPage() {
 
         setLoading(true);
         try {
-            await signUpWithEmail(email.trim(), password.trim(), fullName.trim());
+            await signUpWithEmail(email.trim(), password.trim(), fullName.trim(), userGroup);
             toast.success('สมัครสมาชิกสำเร็จแล้ว! กรุณาตรวจสอบอีเมลยืนยันหรือเข้าสู่ระบบ');
             router.push('/login');
         } catch (error) {
@@ -111,6 +112,25 @@ export default function SignupPage() {
                         <span className="form-hint" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                             * สำหรับการจำลองสิทธิ์ผู้ดูแลระบบ (Admin) ให้ใช้คำว่า &quot;admin&quot; ในอีเมล
                         </span>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            กลุ่มผู้ใช้งาน
+                        </label>
+                        <select 
+                            className="form-input form-select"
+                            required
+                            value={userGroup}
+                            onChange={(e) => setUserGroup(e.target.value)}
+                            disabled={loading}
+                        >
+                            <option value="นักศึกษา">นักศึกษา</option>
+                            <option value="อาจารย์">อาจารย์</option>
+                            <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                            <option value="เจ้าหน้าที่ผู้รับผิดชอบงาน IT หรือผู้ดูแลอุปกรณ์">เจ้าหน้าที่ IT / ผู้ดูแลอุปกรณ์</option>
+                            <option value="ผู้ดูแลระบบ">ผู้ดูแลระบบ</option>
+                        </select>
                     </div>
 
                     <div className="form-group">

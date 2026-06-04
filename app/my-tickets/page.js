@@ -18,6 +18,7 @@ export default function MyTicketsPage() {
     const [loading, setLoading] = useState(true);
     const [profileName, setProfileName] = useState(user.name);
     const [profileEmail, setProfileEmail] = useState(user.email);
+    const [profileGroup, setProfileGroup] = useState(user.group || 'นักศึกษา');
 
     // Fetch user-specific tickets
     const fetchMyTickets = async () => {
@@ -46,6 +47,7 @@ export default function MyTicketsPage() {
     useEffect(() => {
         setProfileName(user.name);
         setProfileEmail(user.email);
+        setProfileGroup(user.group || 'นักศึกษา');
     }, [user]);
 
     useEffect(() => {
@@ -60,7 +62,7 @@ export default function MyTicketsPage() {
             return;
         }
 
-        setUser(profileName.trim(), profileEmail.trim());
+        setUser(profileName.trim(), profileEmail.trim(), profileGroup);
         toast.success('อัปเดตข้อมูลผู้ใช้งานจำลองแล้ว');
     };
 
@@ -115,6 +117,21 @@ export default function MyTicketsPage() {
                                     onChange={(e) => setProfileEmail(e.target.value)}
                                     disabled={isRealAuth}
                                 />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                <label className="form-label">กลุ่มผู้ใช้งาน</label>
+                                <select 
+                                    className="form-input form-select"
+                                    value={profileGroup}
+                                    onChange={(e) => setProfileGroup(e.target.value)}
+                                    disabled={isRealAuth}
+                                >
+                                    <option value="นักศึกษา">นักศึกษา</option>
+                                    <option value="อาจารย์">อาจารย์</option>
+                                    <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                                    <option value="เจ้าหน้าที่ผู้รับผิดชอบงาน IT หรือผู้ดูแลอุปกรณ์">เจ้าหน้าที่ IT / ผู้ดูแลอุปกรณ์</option>
+                                    <option value="ผู้ดูแลระบบ">ผู้ดูแลระบบ</option>
+                                </select>
                             </div>
                             {!isRealAuth && (
                                 <div className="form-group btn-group-align" style={{ marginBottom: 0 }}>

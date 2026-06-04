@@ -20,6 +20,7 @@ export async function GET(request) {
         const assigned_to = searchParams.get('assigned_to');
         const requester_name = searchParams.get('requester_name');
         const requester_email = searchParams.get('requester_email');
+        const requester_group = searchParams.get('requester_group');
 
         let tickets = await DbService.getTickets();
 
@@ -58,6 +59,13 @@ export async function GET(request) {
 
         if (requester_email) {
             tickets = tickets.filter(t => t.requester_email && t.requester_email.toLowerCase().trim() === requester_email.toLowerCase().trim());
+        }
+
+        if (requester_group) {
+            tickets = tickets.filter(t => {
+                const match = t.requester_name.match(/\((นักศึกษา|อาจารย์|เจ้าหน้าที่|เจ้าหน้าที่ผู้รับผิดชอบงาน IT หรือผู้ดูแลอุปกรณ์|ผู้ดูแลระบบ)\)$/);
+                return match && match[1] === requester_group;
+            });
         }
 
         return NextResponse.json(tickets, {

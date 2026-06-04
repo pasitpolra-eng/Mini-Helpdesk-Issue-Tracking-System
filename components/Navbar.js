@@ -8,14 +8,14 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-import { 
-    Headset, Home, PlusCircle, List, User, Shield, 
+import {
+    Headset, Home, PlusCircle, List, User, Shield,
     BarChart3, Settings, X, Menu, ShieldCheck, UserCircle, LogIn, LogOut
 } from 'lucide-react';
 
 export default function Navbar() {
     const pathname = usePathname();
-    const { role, setRole, user, signOutUser, isRealAuth } = useApp();
+    const { role, setRole, user, signOutUser, isRealAuth, MOCK_PROFILES, switchMockProfile } = useApp();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const isAdmin = role === 'admin';
@@ -51,8 +51,8 @@ export default function Navbar() {
     return (
         <>
             {/* Sidebar Overlay */}
-            <div 
-                className={`sidebar-overlay ${sidebarOpen ? 'overlay-active' : ''}`} 
+            <div
+                className={`sidebar-overlay ${sidebarOpen ? 'overlay-active' : ''}`}
                 onClick={toggleSidebar}
             ></div>
 
@@ -90,28 +90,52 @@ export default function Navbar() {
                 </div>
 
                 <div className="role-switcher">
-                    <div className="role-switcher-label">มุมมอง</div>
-                    <div className="role-toggle">
-                        <button 
-                            className={`role-btn ${!isAdmin ? 'role-btn-active' : ''}`}
-                            onClick={() => { setRole('user'); setSidebarOpen(false); }}
+                    <div className="role-switcher-label">สลับกลุ่มผู้ใช้งาน</div>
+                    {isRealAuth ? (
+                        <div style={{
+                            padding: '8px 12px',
+                            background: 'rgba(255,255,255,0.02)',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            color: 'var(--text-secondary)',
+                            border: '1px solid var(--border-color)',
+                            textAlign: 'center'
+                        }}>
+                            ใช้บัญชีจริง
+                        </div>
+                    ) : (
+                        <select
+                            className="form-input form-select"
+                            style={{
+                                width: '100%',
+                                fontSize: '0.85rem',
+                                padding: '0.4rem 0.5rem',
+                                borderRadius: '6px',
+                                background: 'rgba(0,0,0,0.2)',
+                                border: '1px solid var(--border-color)',
+                                color: 'var(--text-primary)'
+                            }}
+                            value={MOCK_PROFILES?.findIndex(p => p.group === user?.group)}
+                            onChange={(e) => {
+                                const idx = parseInt(e.target.value, 10);
+                                if (idx >= 0 && idx < MOCK_PROFILES.length) {
+                                    switchMockProfile(idx);
+                                }
+                                setSidebarOpen(false);
+                            }}
                         >
-                            <UserCircle style={{ width: 14, height: 14 }} />
-                            User
-                        </button>
-                        <button 
-                            className={`role-btn ${isAdmin ? 'role-btn-active' : ''}`}
-                            onClick={() => { setRole('admin'); setSidebarOpen(false); }}
-                        >
-                            <Shield style={{ width: 14, height: 14 }} />
-                            Admin
-                        </button>
-                    </div>
+                            {MOCK_PROFILES?.map((p, idx) => (
+                                <option key={idx} value={idx}>
+                                    {p.group}
+                                </option>
+                            ))}
+                        </select>
+                    )}
                 </div>
 
                 <nav className="sidebar-nav">
                     {menuItems.map((item) => (
-                        <Link 
+                        <Link
                             key={item.href}
                             href={item.href}
                             className={`nav-item ${isActive(item.href) ? 'nav-item-active' : ''}`}
@@ -133,17 +157,28 @@ export default function Navbar() {
                                     <UserCircle style={{ width: 20, height: 20 }} />
                                 )}
                             </div>
-                            <div className="user-details" style={{ overflow: 'hidden' }}>
-                                <span className="user-name" style={{ textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                            <div className="user-details" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                <span className="user-name" style={{ textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', fontWeight: 600 }}>
                                     {user?.name || (isAdmin ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน')}
                                 </span>
-                                <span className={`user-role-badge ${isAdmin ? 'admin-badge' : 'user-badge'}`}>
-                                    {isAdmin ? 'Admin' : 'User'} {isRealAuth ? '(Auth)' : ''}
-                                </span>
+                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                    <span className={`user-role-badge ${isAdmin ? 'admin-badge' : 'user-badge'}`} style={{ fontSize: '0.65rem', padding: '1px 4px' }}>
+                                        {isAdmin ? 'Admin' : 'User'} {isRealAuth ? '(Auth)' : ''}
+                                    </span>
+                                    <span className="user-role-badge" style={{
+                                        fontSize: '0.65rem',
+                                        padding: '1px 4px',
+                                        background: 'rgba(59, 130, 246, 0.15)',
+                                        color: '#60a5fa',
+                                        border: '1px solid rgba(59, 130, 246, 0.3)'
+                                    }}>
+                                        {user?.group || 'นักศึกษา'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         {isRealAuth ? (
-                            <button 
+                            <button
                                 onClick={signOutUser}
                                 className="btn btn-ghost btn-sm"
                                 style={{ width: '100%', justifyContent: 'center', padding: '0.4rem', fontSize: '0.85rem', color: '#f87171', display: 'flex', alignItems: 'center' }}
@@ -152,14 +187,14 @@ export default function Navbar() {
                                 ออกจากระบบ
                             </button>
                         ) : (
-                            <Link 
-                                href="/login" 
+                            <Link
+                                href="/login"
                                 className="btn btn-primary btn-sm"
                                 style={{ width: '100%', justifyContent: 'center', padding: '0.4rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', textDecoration: 'none' }}
                                 onClick={() => setSidebarOpen(false)}
                             >
                                 <LogIn style={{ width: 14, height: 14, marginRight: 6 }} />
-                                เข้าสู่ระบบ (Supabase)
+                                เข้าสู่ระบบ
                             </Link>
                         )}
                     </div>

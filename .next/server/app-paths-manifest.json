@@ -2,14 +2,11 @@
   "/page": "app/page.js",
   "/api/stats/route": "app/api/stats/route.js",
   "/create/page": "app/create/page.js",
-  "/api/issue-types/route": "app/api/issue-types/route.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/my-tickets/page": "app/my-tickets/page.js",
+  "/api/issue-types/route": "app/api/issue-types/route.js",
+  "/tickets/page": "app/tickets/page.js",
+  "/admin/page": "app/admin/page.js",
   "/api/tickets/route": "app/api/tickets/route.js",
-  "/login/page": "app/login/page.js",
-  "/signup/page": "app/signup/page.js",
-  "/api/upload/route": "app/api/upload/route.js",
-  "/tickets/[id]/page": "app/tickets/[id]/page.js",
-  "/api/tickets/[id]/route": "app/api/tickets/[id]/route.js",
-  "/tickets/page": "app/tickets/page.js"
+  "/my-tickets/page": "app/my-tickets/page.js",
+  "/login/page": "app/login/page.js"
 }

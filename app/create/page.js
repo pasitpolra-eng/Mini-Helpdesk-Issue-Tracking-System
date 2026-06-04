@@ -11,7 +11,7 @@ import { useApp } from '@/context/AppContext';
 import { PlusCircle, Info, User, Send, Loader } from 'lucide-react';
 export default function CreateTicketPage() {
     const router = useRouter();
-    const { user, setUser, toast, confirm } = useApp();
+    const { user, setUser, toast, confirm, isRealAuth } = useApp();
     const [issueTypes, setIssueTypes] = useState([]);
 
     useEffect(() => {
@@ -37,6 +37,7 @@ export default function CreateTicketPage() {
     const [location, setLocation] = useState('');
     const [requesterName, setRequesterName] = useState(user.name);
     const [requesterEmail, setRequesterEmail] = useState(user.email);
+    const [requesterGroup, setRequesterGroup] = useState(user.group || 'นักศึกษา');
     const [submitting, setSubmitting] = useState(false);
     
     // File upload states
@@ -79,6 +80,7 @@ export default function CreateTicketPage() {
     useEffect(() => {
         setRequesterName(user.name);
         setRequesterEmail(user.email);
+        setRequesterGroup(user.group || 'นักศึกษา');
     }, [user]);
 
     const handleSubmit = async (e) => {
@@ -111,7 +113,8 @@ export default function CreateTicketPage() {
                     priority,
                     location: location.trim(),
                     requester_name: requesterName.trim(),
-                    requester_email: requesterEmail.trim()
+                    requester_email: requesterEmail.trim(),
+                    requester_group: requesterGroup
                 })
             });
 
@@ -119,7 +122,7 @@ export default function CreateTicketPage() {
                 const ticket = await res.json();
                 
                 // Save user profile state for next time
-                setUser(requesterName.trim(), requesterEmail.trim());
+                setUser(requesterName.trim(), requesterEmail.trim(), requesterGroup);
 
                 // Reset form
                 setTitle('');
@@ -362,6 +365,29 @@ export default function CreateTicketPage() {
                                 value={requesterEmail}
                                 onChange={(e) => setRequesterEmail(e.target.value)}
                             />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">กลุ่มผู้ใช้งาน <span className="required">*</span></label>
+                            <select 
+                                className="form-input form-select"
+                                required
+                                value={requesterGroup}
+                                onChange={(e) => setRequesterGroup(e.target.value)}
+                                disabled={isRealAuth}
+                                style={isRealAuth ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
+                            >
+                                <option value="นักศึกษา">นักศึกษา</option>
+                                <option value="อาจารย์">อาจารย์</option>
+                                <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                                <option value="เจ้าหน้าที่ผู้รับผิดชอบงาน IT หรือผู้ดูแลอุปกรณ์">เจ้าหน้าที่ IT / ผู้ดูแลอุปกรณ์</option>
+                                <option value="ผู้ดูแลระบบ">ผู้ดูแลระบบ</option>
+                            </select>
+                            {isRealAuth && (
+                                <span className="form-hint" style={{ color: 'var(--warning-color, #f59e0b)' }}>
+                                    กลุ่มผู้ใช้งานถูกกำหนดจากบัญชีที่เข้าสู่ระบบ
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>

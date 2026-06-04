@@ -35,6 +35,7 @@ export default function TicketListPage() {
     const [status, setStatus] = useState('');
     const [priority, setPriority] = useState('');
     const [issueType, setIssueType] = useState('');
+    const [requesterGroup, setRequesterGroup] = useState('');
 
     // Fetch and filter tickets dynamically
     useEffect(() => {
@@ -46,6 +47,7 @@ export default function TicketListPage() {
                 if (status) params.append('status', status);
                 if (priority) params.append('priority', priority);
                 if (issueType) params.append('issue_type', issueType);
+                if (requesterGroup) params.append('requester_group', requesterGroup);
 
                 const res = await fetch(`/api/tickets?${params.toString()}`);
                 if (res.ok) {
@@ -62,13 +64,14 @@ export default function TicketListPage() {
         // Debounce search slightly
         const timer = setTimeout(fetchTickets, 150);
         return () => clearTimeout(timer);
-    }, [query, status, priority, issueType]);
+    }, [query, status, priority, issueType, requesterGroup]);
 
     const clearFilters = () => {
         setQuery('');
         setStatus('');
         setPriority('');
         setIssueType('');
+        setRequesterGroup('');
     };
 
     const handleExportCSV = (ticketsList) => {
@@ -240,6 +243,19 @@ export default function TicketListPage() {
                         {issueTypes.map(t => (
                             <option key={t.id} value={t.name}>{t.name}</option>
                         ))}
+                    </select>
+
+                    <select 
+                        className="form-input form-select filter-select"
+                        value={requesterGroup}
+                        onChange={(e) => setRequesterGroup(e.target.value)}
+                    >
+                        <option value="">ทุกกลุ่มผู้ใช้</option>
+                        <option value="นักศึกษา">นักศึกษา</option>
+                        <option value="อาจารย์">อาจารย์</option>
+                        <option value="เจ้าหน้าที่">เจ้าหน้าที่</option>
+                        <option value="เจ้าหน้าที่ผู้รับผิดชอบงาน IT หรือผู้ดูแลอุปกรณ์">เจ้าหน้าที่ IT / ผู้ดูแลอุปกรณ์</option>
+                        <option value="ผู้ดูแลระบบ">ผู้ดูแลระบบ</option>
                     </select>
 
                     <button className="btn btn-ghost btn-sm" onClick={clearFilters}>

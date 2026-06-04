@@ -12,12 +12,45 @@ import { supabase } from '@/lib/db';
 
 const AppContext = createContext();
 
+export const MOCK_PROFILES = [
+    {
+        name: '',
+        email: '',
+        group: 'นักศึกษา',
+        role: 'user'
+    },
+    {
+        name: '',
+        email: '',
+        group: 'อาจารย์',
+        role: 'user'
+    },
+    {
+        name: '',
+        email: '',
+        group: 'เจ้าหน้าที่',
+        role: 'user'
+    },
+    {
+        name: '',
+        email: '',
+        group: 'เจ้าหน้าที่ผู้รับผิดชอบงาน IT หรือผู้ดูแลอุปกรณ์',
+        role: 'admin'
+    },
+    {
+        name: '',
+        email: '',
+        group: 'ผู้ดูแลระบบ',
+        role: 'admin'
+    }
+];
+
 export function AppProvider({ children }) {
     // ── Simulated or Real Role ──────────────────────────────────────
     const [role, setRoleState] = useState('user');
     
     // ── Simulated or Real User Profile ──────────────────────────────
-    const [user, setUserState] = useState({ name: 'นักศึกษา ทดสอบ', email: 'student@example.com' });
+    const [user, setUserState] = useState({ name: '', email: '', group: 'นักศึกษา' });
     
     // ── Toast Notifications State ───────────────────────────
     const [toasts, setToasts] = useState([]);
@@ -35,10 +68,10 @@ export function AppProvider({ children }) {
                 setUserState(JSON.parse(storedUser));
             } catch (e) {
                 console.error(e);
-                setUserState({ name: 'นักศึกษา ทดสอบ', email: 'student@example.com' });
+                setUserState({ name: '', email: '', group: 'นักศึกษา' });
             }
         } else {
-            setUserState({ name: 'นักศึกษา ทดสอบ', email: 'student@example.com' });
+            setUserState({ name: '', email: '', group: 'นักศึกษา' });
         }
     };
 
@@ -46,14 +79,19 @@ export function AppProvider({ children }) {
         if (!session || !session.user) return;
         const userEmail = session.user.email;
         const userName = session.user.user_metadata?.full_name || userEmail.split('@')[0];
+        const userGroup = session.user.user_metadata?.user_group || 'นักศึกษา';
         setUserState({
             name: userName,
             email: userEmail,
-            id: session.user.id
+            id: session.user.id,
+            group: userGroup
         });
 
-        // Determine role based on email content
-        const isAdmin = userEmail.toLowerCase().includes('admin') || userEmail.toLowerCase() === 'admin@example.com';
+        // Determine role based on email content or user group
+        const isAdmin = userEmail.toLowerCase().includes('admin') || 
+                        userEmail.toLowerCase() === 'admin@example.com' ||
+                        userGroup === 'ผู้ดูแลระบบ' || 
+                        userGroup === 'เจ้าหน้าที่ผู้รับผิดชอบงาน IT หรือผู้ดูแลอุปกรณ์';
         setRoleState(isAdmin ? 'admin' : 'user');
     };
 
@@ -89,13 +127,14 @@ export function AppProvider({ children }) {
         return data;
     };
 
-    const signUpWithEmail = async (email, password, fullName) => {
+    const signUpWithEmail = async (email, password, fullName, userGroup = 'นักศึกษา') => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
                 data: {
-                    full_name: fullName
+                    full_name: fullName,
+                    user_group: userGroup
                 }
             }
         });
@@ -118,10 +157,20 @@ export function AppProvider({ children }) {
         showToast(`เปลี่ยนเป็นมุมมอง ${newRole === 'admin' ? 'Admin' : 'User'} แล้ว`, 'info');
     };
 
-    const setUser = (name, email) => {
-        const updated = { name, email };
+    const setUser = (name, email, group = 'นักศึกษา') => {
+        const updated = { name, email, group };
         setUserState(updated);
         localStorage.setItem('helpdesk_current_user', JSON.stringify(updated));
+    };
+
+    const switchMockProfile = (profileIndex) => {
+        const profile = MOCK_PROFILES[profileIndex];
+        if (profile) {
+            setUser(profile.name, profile.email, profile.group);
+            setRoleState(profile.role);
+            localStorage.setItem('helpdesk_current_role', profile.role);
+            showToast(`สลับเป็นโปรไฟล์ ${profile.name} (${profile.group}) แล้ว`, 'success');
+        }
     };
 
     // ── Toast Logic ─────────────────────────────────────────
@@ -185,7 +234,9 @@ export function AppProvider({ children }) {
             loginWithEmail,
             signUpWithEmail,
             signOutUser,
-            isRealAuth: !!(user && user.id)
+            isRealAuth: !!(user && user.id),
+            MOCK_PROFILES,
+            switchMockProfile
         }}>
             {children}
             

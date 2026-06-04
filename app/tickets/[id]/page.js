@@ -84,6 +84,15 @@ const parseDescriptionAndAttachments = (rawDescription) => {
     };
 };
 
+const parseRequester = (fullName) => {
+    if (!fullName) return { name: '', group: '' };
+    const match = fullName.match(/^(.*?)\s*\((นักศึกษา|อาจารย์|เจ้าหน้าที่|เจ้าหน้าที่ผู้รับผิดชอบงาน IT หรือผู้ดูแลอุปกรณ์|ผู้ดูแลระบบ)\)$/);
+    if (match) {
+        return { name: match[1], group: match[2] };
+    }
+    return { name: fullName, group: 'นักศึกษา' };
+};
+
 export default function TicketDetailPage({ params }) {
     const router = useRouter();
     const { id } = params;
@@ -208,7 +217,11 @@ export default function TicketDetailPage({ params }) {
                         <div class="grid">
                              <div>
                                  <span class="label">ชื่อผู้แจ้ง: </span>
-                                 <span class="value">${t.requester_name}</span>
+                                 <span class="value">${parseRequester(t.requester_name).name}</span>
+                             </div>
+                             <div>
+                                 <span class="label">กลุ่มผู้ใช้งาน: </span>
+                                 <span class="value">${parseRequester(t.requester_name).group || 'นักศึกษา'}</span>
                              </div>
                              <div>
                                  <span class="label">อีเมลผู้แจ้ง: </span>
@@ -735,7 +748,24 @@ export default function TicketDetailPage({ params }) {
                         <div className="detail-info-list">
                             <div className="detail-info-item">
                                 <span className="info-label"><User style={{ width: 14, height: 14 }} /> ชื่อ</span>
-                                <span className="info-value">{ticket.requester_name}</span>
+                                <span className="info-value">{parseRequester(ticket.requester_name).name}</span>
+                            </div>
+                            <div className="detail-info-item">
+                                <span className="info-label"><UserCheck style={{ width: 14, height: 14 }} /> กลุ่มผู้ใช้งาน</span>
+                                <span className="info-value">
+                                    <span className="user-role-badge" style={{
+                                        display: 'inline-block',
+                                        padding: '2px 8px',
+                                        borderRadius: '4px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 600,
+                                        background: 'rgba(59, 130, 246, 0.1)',
+                                        color: '#60a5fa',
+                                        border: '1px solid rgba(59, 130, 246, 0.2)'
+                                    }}>
+                                        {parseRequester(ticket.requester_name).group || 'นักศึกษา'}
+                                    </span>
+                                </span>
                             </div>
                             <div className="detail-info-item">
                                 <span className="info-label"><Mail style={{ width: 14, height: 14 }} /> อีเมล</span>
