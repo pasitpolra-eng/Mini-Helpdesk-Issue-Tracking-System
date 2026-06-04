@@ -1,7 +1,7 @@
 {
-  "discord_webhook_url": "https://webhook.site/623bf74c-3aa4-4990-9a09-d59758c6cf54",
-  "emailjs_service_id": "pasitpol.ra@ksu.ac.th",
-  "emailjs_template_id": "pasitpol.ra@ksu.ac.th",
-  "emailjs_public_key": "basisceem@gmail.com",
-  "emailjs_private_key": "123456"
+  "discord_webhook_url": "",
+  "emailjs_service_id": "",
+  "emailjs_template_id": "",
+  "emailjs_public_key": "",
+  "emailjs_private_key": ""
 }

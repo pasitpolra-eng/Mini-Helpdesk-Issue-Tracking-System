@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { 
-    Settings, ArrowLeft, Save, Bell, Mail, Send, Loader, AlertCircle 
+    Settings, ArrowLeft, Save, Bell, Mail, Send, Loader, AlertCircle, Info 
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -180,7 +180,13 @@ export default function AdminSettingsPage() {
                                 placeholder="service_xxxxxx" 
                                 value={serviceId}
                                 onChange={(e) => setServiceId(e.target.value)}
+                                style={serviceId.includes('@') ? { borderColor: '#f87171' } : {}}
                             />
+                            {serviceId.includes('@') && (
+                                <span className="form-hint" style={{ color: '#f87171', marginTop: 4, display: 'block', fontSize: '0.8rem', fontWeight: 500 }}>
+                                    ⚠️ รหัส Service ID ไม่ใช่อีเมล (มักจะขึ้นต้นด้วย service_)
+                                </span>
+                            )}
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">EmailJS Template ID</label>
@@ -190,7 +196,13 @@ export default function AdminSettingsPage() {
                                 placeholder="template_xxxxxx" 
                                 value={templateId}
                                 onChange={(e) => setTemplateId(e.target.value)}
+                                style={templateId.includes('@') ? { borderColor: '#f87171' } : {}}
                             />
+                            {templateId.includes('@') && (
+                                <span className="form-hint" style={{ color: '#f87171', marginTop: 4, display: 'block', fontSize: '0.8rem', fontWeight: 500 }}>
+                                    ⚠️ รหัส Template ID ไม่ใช่อีเมล (มักจะขึ้นต้นด้วย template_)
+                                </span>
+                            )}
                         </div>
                     </div>
 
@@ -203,7 +215,13 @@ export default function AdminSettingsPage() {
                                 placeholder="user_xxxxxxxxxxxxxxxx" 
                                 value={publicKey}
                                 onChange={(e) => setPublicKey(e.target.value)}
+                                style={publicKey.includes('@') ? { borderColor: '#f87171' } : {}}
                             />
+                            {publicKey.includes('@') && (
+                                <span className="form-hint" style={{ color: '#f87171', marginTop: 4, display: 'block', fontSize: '0.8rem', fontWeight: 500 }}>
+                                    ⚠️ ดูเหมือนคุณกรอกอีเมลในช่องนี้ รหัส Public Key ของ EmailJS ควรเป็นรหัสคีย์ (เช่น user_xxx หรือรหัสสุ่มอื่นๆ)
+                                </span>
+                            )}
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">EmailJS Private Key (สำหรับ Server-Side REST API)</label>
@@ -213,21 +231,27 @@ export default function AdminSettingsPage() {
                                 placeholder="••••••••••••••••••••••••" 
                                 value={privateKey}
                                 onChange={(e) => setPrivateKey(e.target.value)}
+                                style={privateKey.includes('@') ? { borderColor: '#f87171' } : {}}
                             />
+                            {privateKey.includes('@') && (
+                                <span className="form-hint" style={{ color: '#f87171', marginTop: 4, display: 'block', fontSize: '0.8rem', fontWeight: 500 }}>
+                                    ⚠️ รหัส Private Key ไม่ใช่อีเมล
+                                </span>
+                            )}
                         </div>
                     </div>
 
                     <div style={{ 
                         marginTop: '1.5rem', 
                         padding: '1rem', 
-                        background: 'rgba(239, 68, 68, 0.05)', 
-                        border: '1px solid rgba(239, 68, 68, 0.15)',
+                        background: 'rgba(59, 130, 246, 0.05)', 
+                        border: '1px solid rgba(59, 130, 246, 0.15)',
                         borderRadius: '6px',
                         display: 'flex',
                         gap: '0.75rem',
                         alignItems: 'flex-start'
                     }}>
-                        <AlertCircle style={{ width: 18, height: 18, color: '#f87171', flexShrink: 0, marginTop: 2 }} />
+                        <Info style={{ width: 18, height: 18, color: 'var(--primary-color)', flexShrink: 0, marginTop: 2 }} />
                         <span style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.4' }}>
                             <strong>คำแนะนำการตั้งค่าอีเมล:</strong> ใน EmailJS template ของคุณ ควรใช้ตัวแปร <code>{"{{subject}}"}</code>, <code>{"{{to_email}}"}</code>, <code>{"{{to_name}}"}</code>, <code>{"{{message}}"}</code> เป็นตัวรับข้อมูลหลักเพื่อรับหัวเรื่อง รายชื่อผู้รับ และข้อความเนื้อหารายละเอียดที่ระบบหลังบ้านส่งเข้าไป
                         </span>
