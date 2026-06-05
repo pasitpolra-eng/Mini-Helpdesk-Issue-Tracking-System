@@ -9,6 +9,21 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { List, Plus, Search, X, FileText, Printer } from 'lucide-react';
 import { TicketGrid } from '@/components/TicketCard';
+const THAI_MONTHS = [
+    { value: 1, label: 'มกราคม' },
+    { value: 2, label: 'กุมภาพันธ์' },
+    { value: 3, label: 'มีนาคม' },
+    { value: 4, label: 'เมษายน' },
+    { value: 5, label: 'พฤษภาคม' },
+    { value: 6, label: 'มิถุนายน' },
+    { value: 7, label: 'กรกฎาคม' },
+    { value: 8, label: 'สิงหาคม' },
+    { value: 9, label: 'กันยายน' },
+    { value: 10, label: 'ตุลาคม' },
+    { value: 11, label: 'พฤศจิกายน' },
+    { value: 12, label: 'ธันวาคม' }
+];
+
 export default function TicketListPage() {
     const [issueTypes, setIssueTypes] = useState([]);
     const [tickets, setTickets] = useState([]);
@@ -37,6 +52,59 @@ export default function TicketListPage() {
     const [issueType, setIssueType] = useState('');
     const [requesterGroup, setRequesterGroup] = useState('');
 
+    // Date filter states
+    const [period, setPeriod] = useState('all');
+    const [customMode, setCustomMode] = useState('date'); // 'date' | 'month' | 'year' | 'range'
+
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth() + 1;
+    const currentYear = today.getFullYear();
+
+    const [selectedDay, setSelectedDay] = useState(currentDay);
+    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+    const [selectedYear, setSelectedYear] = useState(currentYear);
+
+    const [selectedMonthOnly, setSelectedMonthOnly] = useState(currentMonth);
+    const [selectedYearOnly, setSelectedYearOnly] = useState(currentYear);
+
+    const [selectedStartDay, setSelectedStartDay] = useState(currentDay);
+    const [selectedStartMonth, setSelectedStartMonth] = useState(currentMonth);
+    const [selectedStartYear, setSelectedStartYear] = useState(currentYear);
+
+    const [selectedEndDay, setSelectedEndDay] = useState(currentDay);
+    const [selectedEndMonth, setSelectedEndMonth] = useState(currentMonth);
+    const [selectedEndYear, setSelectedEndYear] = useState(currentYear);
+
+    const [customYear, setCustomYear] = useState(currentYear.toString());
+
+    const getRangeForCustomMode = (mode, customYearVal) => {
+        let startLocal, endLocal;
+
+        if (mode === 'date') {
+            const dateStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+            startLocal = new Date(`${dateStr}T00:00:00`);
+            endLocal = new Date(`${dateStr}T23:59:59.999`);
+        } else if (mode === 'month') {
+            startLocal = new Date(selectedYearOnly, selectedMonthOnly - 1, 1, 0, 0, 0, 0);
+            endLocal = new Date(selectedYearOnly, selectedMonthOnly, 0, 23, 59, 59, 999);
+        } else if (mode === 'year') {
+            const year = Number(customYearVal);
+            startLocal = new Date(year, 0, 1, 0, 0, 0, 0);
+            endLocal = new Date(year, 11, 31, 23, 59, 59, 999);
+        } else if (mode === 'range') {
+            const startDateStr = `${selectedStartYear}-${String(selectedStartMonth).padStart(2, '0')}-${String(selectedStartDay).padStart(2, '0')}`;
+            const endDateStr = `${selectedEndYear}-${String(selectedEndMonth).padStart(2, '0')}-${String(selectedEndDay).padStart(2, '0')}`;
+            startLocal = new Date(`${startDateStr}T00:00:00`);
+            endLocal = new Date(`${endDateStr}T23:59:59.999`);
+        }
+
+        return {
+            startISO: startLocal.toISOString(),
+            endISO: endLocal.toISOString()
+        };
+    };
+
     // Fetch and filter tickets dynamically
     useEffect(() => {
         async function fetchTickets() {
@@ -48,6 +116,13 @@ export default function TicketListPage() {
                 if (priority) params.append('priority', priority);
                 if (issueType) params.append('issue_type', issueType);
                 if (requesterGroup) params.append('requester_group', requesterGroup);
+                
+                params.append('period', period);
+                if (period === 'custom') {
+                    const { startISO, endISO } = getRangeForCustomMode(customMode, customYear);
+                    params.append('startDate', startISO);
+                    params.append('endDate', endISO);
+                }
 
                 const res = await fetch(`/api/tickets?${params.toString()}`);
                 if (res.ok) {
@@ -64,7 +139,14 @@ export default function TicketListPage() {
         // Debounce search slightly
         const timer = setTimeout(fetchTickets, 150);
         return () => clearTimeout(timer);
-    }, [query, status, priority, issueType, requesterGroup]);
+    }, [
+        query, status, priority, issueType, requesterGroup,
+        period, customMode, customYear,
+        selectedDay, selectedMonth, selectedYear,
+        selectedMonthOnly, selectedYearOnly,
+        selectedStartDay, selectedStartMonth, selectedStartYear,
+        selectedEndDay, selectedEndMonth, selectedEndYear
+    ]);
 
     const clearFilters = () => {
         setQuery('');
@@ -72,6 +154,7 @@ export default function TicketListPage() {
         setPriority('');
         setIssueType('');
         setRequesterGroup('');
+        setPeriod('all');
     };
 
     const handleExportCSV = (ticketsList) => {
@@ -195,7 +278,7 @@ export default function TicketListPage() {
             </div>
 
             {/* Search & Filter Bar */}
-            <div className="filter-bar glass-card">
+            <div className="filter-bar glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div className="search-box">
                     <Search className="search-icon" style={{ width: 18, height: 18 }} />
                     <input 
@@ -208,6 +291,15 @@ export default function TicketListPage() {
                 </div>
                 
                 <div className="filter-row">
+                    <select 
+                        className="form-input form-select filter-select"
+                        value={period}
+                        onChange={(e) => setPeriod(e.target.value)}
+                    >
+                        <option value="all">ทุกช่วงเวลา</option>
+                        <option value="custom">กำหนดเอง 📅</option>
+                    </select>
+
                     <select 
                         className="form-input form-select filter-select"
                         value={status}
@@ -263,6 +355,225 @@ export default function TicketListPage() {
                         ล้างตัวกรอง
                     </button>
                 </div>
+
+                {/* Custom Date Filter Panel */}
+                {period === 'custom' && (
+                    <div className="custom-date-filter-bar glass-card" style={{
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        marginTop: '0rem',
+                        marginBottom: '0rem',
+                        boxShadow: 'none',
+                        border: '1px solid var(--border-card)'
+                    }}>
+                        {/* Mode Selector */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>รูปแบบการกรอง</span>
+                            <select
+                                value={customMode}
+                                onChange={(e) => setCustomMode(e.target.value)}
+                                className="form-input form-select"
+                                style={{ padding: '6px 12px', fontSize: '0.85rem', width: '160px', height: '36px' }}
+                            >
+                                <option value="date">ระบุวันที่</option>
+                                <option value="month">ระบุเดือน</option>
+                                <option value="year">ระบุปี</option>
+                                <option value="range">เลือกช่วงเวลาเอง</option>
+                            </select>
+                        </div>
+
+                        {/* Conditional inputs */}
+                        {customMode === 'date' && (
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>วันที่</span>
+                                    <select
+                                        value={selectedDay}
+                                        onChange={(e) => setSelectedDay(Number(e.target.value))}
+                                        className="form-input form-select"
+                                        style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '80px' }}
+                                    >
+                                        {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>เดือน</span>
+                                    <select
+                                        value={selectedMonth}
+                                        onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                        className="form-input form-select"
+                                        style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '130px' }}
+                                    >
+                                        {THAI_MONTHS.map(m => (
+                                            <option key={m.value} value={m.value}>{m.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ปี</span>
+                                    <select
+                                        value={selectedYear}
+                                        onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                        className="form-input form-select"
+                                        style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '120px' }}
+                                    >
+                                        {Array.from({ length: 5 }, (_, i) => {
+                                            const y = new Date().getFullYear() - i;
+                                            return <option key={y} value={y}>{y + 543} (ค.ศ. {y})</option>;
+                                        })}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {customMode === 'month' && (
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>เดือน</span>
+                                    <select
+                                        value={selectedMonthOnly}
+                                        onChange={(e) => setSelectedMonthOnly(Number(e.target.value))}
+                                        className="form-input form-select"
+                                        style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '130px' }}
+                                    >
+                                        {THAI_MONTHS.map(m => (
+                                            <option key={m.value} value={m.value}>{m.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ปี</span>
+                                    <select
+                                        value={selectedYearOnly}
+                                        onChange={(e) => setSelectedYearOnly(Number(e.target.value))}
+                                        className="form-input form-select"
+                                        style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '120px' }}
+                                    >
+                                        {Array.from({ length: 5 }, (_, i) => {
+                                            const y = new Date().getFullYear() - i;
+                                            return <option key={y} value={y}>{y + 543} (ค.ศ. {y})</option>;
+                                        })}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {customMode === 'year' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>เลือกปี</span>
+                                <select
+                                    value={customYear}
+                                    onChange={(e) => setCustomYear(e.target.value)}
+                                    className="form-input form-select"
+                                    style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '120px' }}
+                                >
+                                    {Array.from({ length: 5 }, (_, i) => {
+                                        const y = new Date().getFullYear() - i;
+                                        return <option key={y} value={y.toString()}>{y + 543} (ค.ศ. {y})</option>;
+                                    })}
+                                </select>
+                            </div>
+                        )}
+
+                        {customMode === 'range' && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginRight: '0.25rem' }}>จาก</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>วันที่</span>
+                                        <select
+                                            value={selectedStartDay}
+                                            onChange={(e) => setSelectedStartDay(Number(e.target.value))}
+                                            className="form-input form-select"
+                                            style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '80px' }}
+                                        >
+                                            {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                                                <option key={d} value={d}>{d}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>เดือน</span>
+                                        <select
+                                            value={selectedStartMonth}
+                                            onChange={(e) => setSelectedStartMonth(Number(e.target.value))}
+                                            className="form-input form-select"
+                                            style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '130px' }}
+                                        >
+                                            {THAI_MONTHS.map(m => (
+                                                <option key={m.value} value={m.value}>{m.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ปี</span>
+                                        <select
+                                            value={selectedStartYear}
+                                            onChange={(e) => setSelectedStartYear(Number(e.target.value))}
+                                            className="form-input form-select"
+                                            style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '120px' }}
+                                        >
+                                            {Array.from({ length: 5 }, (_, i) => {
+                                                const y = new Date().getFullYear() - i;
+                                                return <option key={y} value={y}>{y + 543} (ค.ศ. {y})</option>;
+                                            })}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginRight: '0.25rem' }}>ถึง</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>วันที่</span>
+                                        <select
+                                            value={selectedEndDay}
+                                            onChange={(e) => setSelectedEndDay(Number(e.target.value))}
+                                            className="form-input form-select"
+                                            style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '80px' }}
+                                        >
+                                            {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                                                <option key={d} value={d}>{d}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>เดือน</span>
+                                        <select
+                                            value={selectedEndMonth}
+                                            onChange={(e) => setSelectedEndMonth(Number(e.target.value))}
+                                            className="form-input form-select"
+                                            style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '130px' }}
+                                        >
+                                            {THAI_MONTHS.map(m => (
+                                                <option key={m.value} value={m.value}>{m.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ปี</span>
+                                        <select
+                                            value={selectedEndYear}
+                                            onChange={(e) => setSelectedEndYear(Number(e.target.value))}
+                                            className="form-input form-select"
+                                            style={{ padding: '6px 12px', fontSize: '0.85rem', height: '36px', width: '120px' }}
+                                        >
+                                            {Array.from({ length: 5 }, (_, i) => {
+                                                const y = new Date().getFullYear() - i;
+                                                return <option key={y} value={y}>{y + 543} (ค.ศ. {y})</option>;
+                                            })}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Results Grid */}

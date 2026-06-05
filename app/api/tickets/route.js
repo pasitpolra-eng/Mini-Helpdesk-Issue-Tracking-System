@@ -21,8 +21,33 @@ export async function GET(request) {
         const requester_name = searchParams.get('requester_name');
         const requester_email = searchParams.get('requester_email');
         const requester_group = searchParams.get('requester_group');
+        const period = searchParams.get('period') || 'all';
+        const startDate = searchParams.get('startDate');
+        const endDate = searchParams.get('endDate');
 
         let tickets = await DbService.getTickets();
+
+        // Apply date filtering
+        if (period === 'day') {
+            const now = new Date();
+            const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            tickets = tickets.filter(t => new Date(t.created_at) >= oneDayAgo);
+        } else if (period === 'week') {
+            const now = new Date();
+            const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            tickets = tickets.filter(t => new Date(t.created_at) >= oneWeekAgo);
+        } else if (period === 'month') {
+            const now = new Date();
+            const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            tickets = tickets.filter(t => new Date(t.created_at) >= oneMonthAgo);
+        } else if (period === 'custom' && startDate) {
+            const start = new Date(startDate);
+            const end = endDate ? new Date(endDate) : new Date(startDate);
+            tickets = tickets.filter(t => {
+                const tDate = new Date(t.created_at);
+                return tDate >= start && tDate <= end;
+            });
+        }
 
         if (query) {
             const q = query.toLowerCase().trim();

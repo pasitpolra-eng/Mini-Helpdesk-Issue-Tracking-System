@@ -917,14 +917,14 @@ export default function AdminManagementPage() {
                                 <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>
                                     หัวข้อปัญหา
                                 </div>
-                                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#f8fafc' }}>
+                                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
                                     {viewingTicket.title}
                                 </h2>
-                                <div style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', margin: '0.5rem 0' }}></div>
+                                <div style={{ borderBottom: '1px solid var(--border-card)', margin: '0.5rem 0' }}></div>
                                 <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>
                                     รายละเอียดปัญหา
                                 </div>
-                                <p style={{ margin: 0, fontSize: '0.95rem', color: '#cbd5e1', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                                <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
                                     {viewingTicket.description}
                                 </p>
                             </div>

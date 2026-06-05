@@ -10,12 +10,13 @@ import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import {
     Home, PlusCircle, List, User, Shield,
-    BarChart3, Settings, X, Menu, ShieldCheck, UserCircle, LogIn, LogOut
+    BarChart3, Settings, X, Menu, ShieldCheck, UserCircle, LogIn, LogOut,
+    Sun, Moon
 } from 'lucide-react';
 
 export default function Navbar() {
     const pathname = usePathname();
-    const { role, setRole, user, signOutUser, isRealAuth, MOCK_PROFILES, switchMockProfile } = useApp();
+    const { role, setRole, user, signOutUser, isRealAuth, MOCK_PROFILES, switchMockProfile, theme, toggleTheme } = useApp();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const isAdmin = role === 'admin';
@@ -65,7 +66,10 @@ export default function Navbar() {
                     <img src="/front-desk_17210386.png" alt="Mini Helpdesk" style={{ width: 22, height: 22 }} />
                     <span style={{ fontWeight: 600 }}>Mini Helpdesk</span>
                 </div>
-                <div className="mobile-role-indicator">
+                <div className="mobile-role-indicator" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button className="theme-toggle-btn" onClick={toggleTheme} title={theme === 'dark' ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด'}>
+                        {theme === 'dark' ? <Sun style={{ width: 16, height: 16 }} /> : <Moon style={{ width: 16, height: 16 }} />}
+                    </button>
                     <span className={`user-role-badge ${isAdmin ? 'admin-badge' : 'user-badge'}`}>
                         {isAdmin ? 'Admin' : 'User'}
                     </span>
@@ -146,6 +150,22 @@ export default function Navbar() {
                         </Link>
                     ))}
                 </nav>
+
+                {/* Theme Toggle */}
+                <div style={{ padding: '0.5rem 0.75rem' }}>
+                    <button
+                        className="theme-toggle-btn"
+                        onClick={toggleTheme}
+                        title={theme === 'dark' ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด'}
+                        style={{ width: '100%', gap: '0.5rem' }}
+                    >
+                        {theme === 'dark' ? (
+                            <><Sun style={{ width: 16, height: 16 }} /> <span style={{ fontSize: '0.85rem' }}>โหมดสว่าง</span></>
+                        ) : (
+                            <><Moon style={{ width: 16, height: 16 }} /> <span style={{ fontSize: '0.85rem' }}>โหมดมืด</span></>
+                        )}
+                    </button>
+                </div>
 
                 <div className="sidebar-footer">
                     <div className="sidebar-user-info" style={{ flexDirection: 'column', gap: '0.75rem', alignItems: 'stretch', width: '100%' }}>

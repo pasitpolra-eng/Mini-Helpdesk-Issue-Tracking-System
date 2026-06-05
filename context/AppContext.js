@@ -58,6 +58,9 @@ export function AppProvider({ children }) {
     // ── Modal Confirmation Dialog State ──────────────────────
     const [modal, setModal] = useState(null);
 
+    // ── Theme State ─────────────────────────────────────────
+    const [theme, setTheme] = useState('dark');
+
     const loadSimulatedUser = () => {
         const storedRole = localStorage.getItem('helpdesk_current_role') || 'user';
         setRoleState(storedRole);
@@ -119,6 +122,20 @@ export function AppProvider({ children }) {
             subscription.unsubscribe();
         };
     }, []);
+
+    // ── Load and apply theme ────────────────────────────────
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('helpdesk_theme') || 'dark';
+        setTheme(savedTheme);
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }, []);
+
+    const toggleTheme = () => {
+        const newTheme = theme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+        localStorage.setItem('helpdesk_theme', newTheme);
+        document.documentElement.setAttribute('data-theme', newTheme);
+    };
 
     // Auth methods
     const loginWithEmail = async (email, password) => {
@@ -236,7 +253,9 @@ export function AppProvider({ children }) {
             signOutUser,
             isRealAuth: !!(user && user.id),
             MOCK_PROFILES,
-            switchMockProfile
+            switchMockProfile,
+            theme,
+            toggleTheme
         }}>
             {children}
             
