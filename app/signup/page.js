@@ -109,9 +109,6 @@ export default function SignupPage() {
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={loading}
                         />
-                        <span className="form-hint" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                            * สำหรับการจำลองสิทธิ์ผู้ดูแลระบบ (Admin) ให้ใช้คำว่า &quot;admin&quot; ในอีเมล
-                        </span>
                     </div>
 
                     <div className="form-group">
