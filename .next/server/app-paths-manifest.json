@@ -1,8 +1,12 @@
 {
   "/page": "app/page.js",
-  "/api/stats/route": "app/api/stats/route.js",
+  "/tickets/page": "app/tickets/page.js",
   "/dashboard/page": "app/dashboard/page.js",
+  "/api/stats/route": "app/api/stats/route.js",
+  "/tickets/[id]/page": "app/tickets/[id]/page.js",
   "/admin/page": "app/admin/page.js",
+  "/create/page": "app/create/page.js",
   "/api/issue-types/route": "app/api/issue-types/route.js",
-  "/api/tickets/route": "app/api/tickets/route.js"
+  "/api/tickets/route": "app/api/tickets/route.js",
+  "/my-tickets/page": "app/my-tickets/page.js"
 }

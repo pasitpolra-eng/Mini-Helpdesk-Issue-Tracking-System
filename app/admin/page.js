@@ -140,9 +140,9 @@ export default function AdminManagementPage() {
     };
 
     // Derived Statistics
-    const unresolvedCount = tickets.filter(t => t.status !== STATUSES.RESOLVED && t.status !== STATUSES.CLOSED && t.status !== STATUSES.CANCELLED).length;
-    const urgentCount = tickets.filter(t => t.priority === PRIORITIES.URGENT && t.status !== STATUSES.RESOLVED && t.status !== STATUSES.CLOSED && t.status !== STATUSES.CANCELLED).length;
-    const unassignedCount = tickets.filter(t => !t.assigned_to && t.status !== STATUSES.RESOLVED && t.status !== STATUSES.CLOSED && t.status !== STATUSES.CANCELLED).length;
+    const totalTickets = tickets.length;
+    const completedCount = tickets.filter(t => t.status === STATUSES.RESOLVED || t.status === STATUSES.CLOSED).length;
+    const completionRate = totalTickets > 0 ? Math.round((completedCount / totalTickets) * 100) : 0;
 
     // Filtered Tickets list
     const filteredTickets = tickets.filter(t => {
@@ -595,29 +595,29 @@ export default function AdminManagementPage() {
 
             {/* Admin Overview Cards */}
             <div className="admin-stats-grid">
-                <div className="admin-stat-card border-warning">
+                <div className="admin-stat-card border-primary">
                     <div className="stat-header">
-                        <span className="stat-title">งานค้างทั้งหมด</span>
-                        <Clock className="stat-icon text-warning" style={{ width: 20, height: 20 }} />
+                        <span className="stat-title">งานทั้งหมด</span>
+                        <Inbox className="stat-icon text-primary" style={{ width: 20, height: 20 }} />
                     </div>
-                    <div className="stat-value text-warning">{unresolvedCount}</div>
-                    <div className="stat-desc">รอรับเรื่อง & กำลังดำเนินการ</div>
+                    <div className="stat-value text-primary">{totalTickets}</div>
+                    <div className="stat-desc">จำนวนรายการทั้งหมด</div>
                 </div>
-                <div className="admin-stat-card border-danger">
+                <div className="admin-stat-card border-success">
                     <div className="stat-header">
-                        <span className="stat-title">งานด่วนที่สุด (Urgent)</span>
-                        <AlertTriangle className="stat-icon text-danger" style={{ width: 20, height: 20 }} />
+                        <span className="stat-title">เสร็จแล้ว</span>
+                        <CheckSquare className="stat-icon text-success" style={{ width: 20, height: 20 }} />
                     </div>
-                    <div className="stat-value text-danger">{urgentCount}</div>
-                    <div className="stat-desc">ต้องได้รับการแก้ไขโดยด่วน</div>
+                    <div className="stat-value text-success">{completedCount}</div>
+                    <div className="stat-desc">Resolved & Closed</div>
                 </div>
                 <div className="admin-stat-card border-info">
                     <div className="stat-header">
-                        <span className="stat-title">ยังไม่ได้มอบหมาย</span>
-                        <UserMinus className="stat-icon text-info" style={{ width: 20, height: 20 }} />
+                        <span className="stat-title">อัตราการปิดงาน</span>
+                        <ClipboardCheck className="stat-icon text-info" style={{ width: 20, height: 20 }} />
                     </div>
-                    <div className="stat-value text-info">{unassignedCount}</div>
-                    <div className="stat-desc">รอการมอบหมายเจ้าหน้าที่</div>
+                    <div className="stat-value text-info">{completionRate}%</div>
+                    <div className="stat-desc">เปอร์เซนต์การแล้วเสร็จ</div>
                 </div>
             </div>
 

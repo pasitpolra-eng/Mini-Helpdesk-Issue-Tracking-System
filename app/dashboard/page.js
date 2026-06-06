@@ -822,18 +822,18 @@ export default function DashboardPage() {
                                     <div className="chart-card-header">
                                         <h3 className="chart-card-title">สรุปรายละเอียดภาระงานและอัตราการปิดงาน</h3>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '1rem', margin: '0.5rem 0 0.75rem 0', alignItems: 'center' }}>
-                                        <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--card-muted-bg, #f8fafc)', border: '1px solid var(--border-card)', minWidth: 140 }}>
+                                    <div style={{ display: 'flex', gap: '1rem', margin: '0.5rem 0 0.75rem 0', alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <div style={{ padding: '12px 16px', borderRadius: 8, background: '#4f46e515', border: '1px solid #4f46e540', minWidth: 140 }}>
                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>งานทั้งหมด</div>
-                                            <div style={{ fontWeight: 700, fontSize: '1rem' }}>{workloadTotalDisplay}</div>
+                                            <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#4f46e5' }}>{workloadTotalDisplay}</div>
                                         </div>
-                                        <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--card-muted-bg, #f8fafc)', border: '1px solid var(--border-card)', minWidth: 140 }}>
+                                        <div style={{ padding: '12px 16px', borderRadius: 8, background: '#22c55e15', border: '1px solid #22c55e40', minWidth: 140 }}>
                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>เสร็จแล้ว</div>
-                                            <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--success-color)' }}>{workloadCompletedDisplay}</div>
+                                            <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#22c55e' }}>{workloadCompletedDisplay}</div>
                                         </div>
-                                        <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--card-muted-bg, #f8fafc)', border: '1px solid var(--border-card)', minWidth: 140 }}>
+                                        <div style={{ padding: '12px 16px', borderRadius: 8, background: '#3b82f615', border: '1px solid #3b82f640', minWidth: 140 }}>
                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>อัตราการปิดงาน</div>
-                                            <div style={{ fontWeight: 700, fontSize: '1rem' }}>{workloadClosureRateDisplay}</div>
+                                            <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#3b82f6' }}>{workloadClosureRateDisplay}</div>
                                         </div>
                                     </div>
                                     <div style={{ overflowX: 'auto', flex: 1 }}>
